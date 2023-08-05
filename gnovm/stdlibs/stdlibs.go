@@ -478,6 +478,7 @@ func InjectPackage(store gno.Store, pn *gno.PackageNode) {
 				m.PushValue(res0)
 			},
 		)
+		pn.DefineGoNativeValue("MustParseCoin", std.MustParseCoin)
 		pn.DefineNative("DecodeBech32",
 			gno.Flds( // params
 				"addr", "Address",

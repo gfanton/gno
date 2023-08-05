@@ -23,6 +23,13 @@ func (c Coin) IsGTE(other Coin) bool {
 	return c.Amount >= other.Amount
 }
 
+func (c Coin) IsEqual(other Coin) bool {
+	if c.Denom != other.Denom {
+		panic("invalid coin denominations: " + c.Denom)
+	}
+	return c.Amount == other.Amount
+}
+
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
