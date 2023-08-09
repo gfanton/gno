@@ -125,7 +125,9 @@ func (g *Group) OnStart() error {
 // OnStop implements service.Service by stopping the goroutine described above.
 // NOTE: g.Head must be closed separately using Close.
 func (g *Group) OnStop() {
-	g.FlushAndSync()
+	if err := g.FlushAndSync(); err != nil {
+		panic("FLUSH AND SYNC: " + err.Error())
+	}
 }
 
 // Wait blocks until all internal goroutines are finished. Supposed to be
@@ -136,7 +138,9 @@ func (g *Group) Wait() {
 
 // Close closes the head file. The group must be stopped by this moment.
 func (g *Group) Close() {
-	g.FlushAndSync()
+	if err := g.FlushAndSync(); err != nil {
+		panic("FLUSH AND SYNC: " + err.Error())
+	}
 
 	g.mtx.Lock()
 	_ = g.Head.Close()

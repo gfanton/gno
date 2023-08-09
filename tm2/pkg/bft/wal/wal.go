@@ -171,7 +171,9 @@ func (wal *baseWAL) FlushAndSync() error {
 // before cleaning up files.
 func (wal *baseWAL) OnStop() {
 	wal.flushTicker.Stop()
-	wal.FlushAndSync()
+	if err := wal.FlushAndSync(); err != nil {
+		panic("FLUSH AND SYNC: " + err.Error())
+	}
 	wal.group.Stop()
 	wal.group.Close()
 }
