@@ -3,6 +3,7 @@ package stdlibs
 import (
 	"crypto/sha256"
 	"math"
+	"path"
 	"reflect"
 	"strconv"
 	"time"
@@ -142,6 +143,14 @@ func InjectPackage(store gno.Store, pn *gno.PackageNode) {
 		pn.DefineGoNativeValue("CanBackquote", strconv.CanBackquote)
 		pn.DefineGoNativeValue("IntSize", strconv.IntSize)
 		pn.DefineGoNativeValue("AppendUint", strconv.AppendUint)
+	case "path":
+		pn.DefineGoNativeValue("Clean", path.Clean)
+		pn.DefineGoNativeValue("Split", path.Split)
+		pn.DefineGoNativeValue("Join", path.Join)
+		pn.DefineGoNativeValue("Ext", path.Ext)
+		pn.DefineGoNativeValue("Base", path.Base)
+		pn.DefineGoNativeValue("IsAbs", path.IsAbs)
+		pn.DefineGoNativeValue("Dir", path.Dir)
 	case "std":
 		// NOTE: some of these are overridden in tests/imports.go
 		// Also see stdlibs/InjectPackage.
