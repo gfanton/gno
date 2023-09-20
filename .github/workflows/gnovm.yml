@@ -3,6 +3,7 @@ name: gnovm
 on:
   pull_request:
     paths:
+      - "**"
       - "go.sum"
       - "gnovm/**.go"
       - "gnovm/**.gno"
