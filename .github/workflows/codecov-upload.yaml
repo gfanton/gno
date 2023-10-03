@@ -16,22 +16,28 @@ jobs:
     - run: mkdir -p ${{ runner.temp }}/coverage
 
     - name: Download coverage artifact from gnoland
-      uses: actions/download-artifact@v3
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: gnoland.yml
         name: coverage-gnoland
         path: ${{ runner.temp }}/coverage/gnoland
+        if_no_artifact_found: ignore
 
     - name: Download coverage artifact from gnovm
-      uses: actions/download-artifact@v3
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: gnovm.yml
         name: coverage-gnovm
         path: ${{ runner.temp }}/coverage/gnovm
+        if_no_artifact_found: ignore
 
     - name: Download coverage artifact from tm2
-      uses: actions/download-artifact@v3
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: tm2.yml
         name: coverage-tm2
         path: ${{ runner.temp }}/coverage/tm2
+        if_no_artifact_found: ignore
 
     - name: Upload combined coverage to Codecov
       uses: codecov/codecov-action@v3
