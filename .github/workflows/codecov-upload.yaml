@@ -1,0 +1,41 @@
+name: Codecov Upload
+
+on:
+  workflow_run:
+    workflows: ["gno.land", "tm2", "gnovm"]
+    types:
+      - completed
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - run: mkdir -p ${{ runner.temp }}/coverage
+
+    - name: Download coverage artifact from gnoland
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-gnoland
+        path: ${{ runner.temp }}/coverage/gnoland
+
+    - name: Download coverage artifact from gnovm
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-gnovm
+        path: ${{ runner.temp }}/coverage/gnovm
+
+    - name: Download coverage artifact from tm2
+      uses: actions/download-artifact@v3
+      with:
+        name: coverage-tm2
+        path: ${{ runner.temp }}/coverage/tm2
+
+    - name: Upload combined coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        directory: ${{ runner.temp }}/coverage
+        token: ${{ secrets.CODECOV_TOKEN }} 
+        fail_ci_if_error: ${{ github.repository == 'gnolang/gno' }}

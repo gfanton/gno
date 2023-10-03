@@ -74,7 +74,7 @@ jobs:
           name: ${{runner.os}}-coverage-tm2-${{ matrix.args}}-${{matrix.goversion}}
           path: ./tm2/coverage.out
 
-  upload-coverage:
+  upload-coverage-artifact:
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -82,9 +82,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: ${{ runner.temp }}/coverage
-      - name: Upload combined coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Merge and re-upload to a single artifact
+        uses: actions/upload-artifact@v3
         with:
-          directory: ${{ runner.temp }}/coverage
-          # token: ${{ secrets.CODECOV_TOKEN }} 
-
+          name: coverage-tm2
+          path: ${{ runner.temp }}/coverage

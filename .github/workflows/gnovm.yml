@@ -84,7 +84,7 @@ jobs:
           name: ${{runner.os}}-coverage-gnovm-${{ matrix.args}}-${{matrix.goversion}}
           path: ./gnovm/coverage.out
 
-  upload-coverage:
+  upload-coverage-artifact:
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -92,9 +92,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: ${{ runner.temp }}/coverage
-      - name: Upload combined coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Merge and re-upload to a single artifact
+        uses: actions/upload-artifact@v3
         with:
-          directory: ${{ runner.temp }}/coverage
-          # token: ${{ secrets.CODECOV_TOKEN }} 
+          name: coverage-gnovm
+          path: ${{ runner.temp }}/coverage
 
