@@ -1,4 +1,4 @@
-name: Codecov Upload
+name: codecov-upload
 
 on:
   workflow_run:
