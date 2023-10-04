@@ -46,7 +46,7 @@ func runSuite(t *testing.T, tempdir string) {
 
 	// add test1 account to docker container keys with "pass" password
 	dockerExec(t, fmt.Sprintf(
-		`echo "pass\npass\n%s\n" | gnokey add -recover -insecure-password-stdin test1`,
+		`printf "pass\npass\n%s\n" | gnokey add -recover -insecure-password-stdin test1`,
 		test1Seed,
 	))
 	// assert test1 account exists
