@@ -105,12 +105,8 @@ func execLint(cfg *lintCfg, args []string, cio *commands.IO) error {
 
 			// reuse test run files
 			func() {
-				// Save the original stdout.
-				originalStdout := os.Stdout
-
 				defer func() {
 					r := recover()
-					os.Stdout = originalStdout
 					if r != nil {
 						if err, ok := r.(error); ok {
 							loc := strings.TrimSpace(err.Error())
@@ -131,7 +127,6 @@ func execLint(cfg *lintCfg, args []string, cio *commands.IO) error {
 						}
 					}
 				}()
-				os.Stdout, _ = os.Open(os.DevNull)
 
 				memPkg := gno.ReadMemPackage(filepath.Dir(pkgPath), pkgPath)
 				m := tests.TestMachine(testStore, stdout, memPkg.Name)
@@ -159,8 +154,6 @@ func execLint(cfg *lintCfg, args []string, cio *commands.IO) error {
 
 					m.RunFiles(testfiles.Files...)
 				}
-				// Reset os.Stdout to its original value.
-				os.Stdout = originalStdout
 			}()
 		}
 
@@ -170,6 +163,11 @@ func execLint(cfg *lintCfg, args []string, cio *commands.IO) error {
 	if hasError && cfg.setExitStatus != 0 {
 		os.Exit(cfg.setExitStatus)
 	}
+
+	if verbose {
+		fmt.Println("no lint errors")
+	}
+
 	return nil
 }
 

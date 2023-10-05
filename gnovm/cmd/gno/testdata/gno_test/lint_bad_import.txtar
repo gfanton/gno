@@ -1,0 +1,22 @@
+# testing gno lint command: bar import error
+
+! gno lint .
+
+cmp stdout stdout.golden
+cmp stderr stderr.golden
+
+-- bad_file.gno --
+package main
+
+import "python"
+
+func main() {
+	fmt.Println("Hello", 42)
+}
+
+-- gno.mod --
+module gno.land/lint/notdefined
+
+-- stdout.golden --
+-- stderr.golden --
+bad_file.gno:1: unknown import path python (code=2).

@@ -62,6 +62,7 @@ func gnoPackagesFromArgs(args []string) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid file or package path: %w", err)
 		}
+
 		if !info.IsDir() {
 			paths = append(paths, arg)
 		} else {
