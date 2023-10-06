@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/gnolang/gno/tm2/pkg/amino/pkg"
@@ -883,6 +884,8 @@ func NewPackage(gopkg string, p3pkg string, dirname string) *Package {
 	return pkg.NewPackage(gopkg, p3pkg, dirname)
 }
 
+var buildDir string
+
 // NOTE: duplicated in pkg/pkg.go
 func GetCallersDirname() string {
 	dirname := "" // derive from caller.
@@ -894,6 +897,12 @@ func GetCallersDirname() string {
 	if filename == "" || dirname == "" {
 		panic("could not derive caller's package directory")
 	}
+
+	if !filepath.IsAbs(dirname) {
+		dirname, _ = strings.CutPrefix(dirname, "github.com/gnolang/gno")
+		dirname = filepath.Join(buildDir, dirname)
+	}
+
 	return dirname
 }
 
