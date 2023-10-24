@@ -9,7 +9,6 @@ import (
 	"net/http"
 	_ "net/http/pprof" //nolint:gosec
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/rs/cors"
@@ -167,7 +166,7 @@ type Node struct {
 	rpcListeners     []net.Listener       // rpc servers
 	txIndexer        txindex.TxIndexer
 	indexerService   *txindex.IndexerService
-	firstBlockSignal <-chan struct{}
+	firstBlockSignal chan struct{}
 }
 
 func initDBs(config *cfg.Config, dbProvider DBProvider) (blockStore *store.BlockStore, stateDB dbm.DB, err error) {
@@ -442,16 +441,16 @@ func NewNode(config *cfg.Config,
 	// Signal readiness when receiving the first block.
 	const readinessListenerID = "first_block_listener"
 
-	cFirstBlock := make(chan struct{})
-	var once sync.Once
-	evsw.AddListener(readinessListenerID, func(ev events.Event) {
-		if _, ok := ev.(types.EventNewBlock); ok {
-			once.Do(func() {
-				close(cFirstBlock)
-				evsw.RemoveListener(readinessListenerID)
-			})
-		}
-	})
+	// cFirstBlock := make(chan struct{})
+	// var once sync.Once
+	// evsw.AddListener(readinessListenerID, func(ev events.Event) {
+	// 	if _, ok := ev.(types.EventNewBlock); ok {
+	// 		once.Do(func() {
+	// 			close(cFirstBlock)
+	// 			evsw.RemoveListener(readinessListenerID)
+	// 		})
+	// 	}
+	// })
 
 	// Transaction indexing
 	indexerService, txIndexer, err := createAndStartIndexerService(config, dbProvider, evsw, logger)
@@ -569,7 +568,8 @@ func NewNode(config *cfg.Config,
 		txIndexer:        txIndexer,
 		indexerService:   indexerService,
 
-		firstBlockSignal: cFirstBlock,
+		// firstBlockSignal: cFirstBlock,
+		firstBlockSignal: make(chan struct{}),
 	}
 	node.BaseService = *service.NewBaseService(logger, "Node", node)
 
@@ -632,6 +632,10 @@ func (n *Node) OnStart() error {
 	if err != nil {
 		return errors.Wrap(err, "could not dial peers from persistent_peers field")
 	}
+
+	n.Logger.Info("[READY] Node should be ready", genTime)
+	close(n.firstBlockSignal)
+	// n.isListening = true
 
 	return nil
 }

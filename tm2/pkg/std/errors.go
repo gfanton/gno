@@ -33,7 +33,7 @@ type (
 	GasOverflowError       struct{ abciError }
 )
 
-func (e InternalError) Error() string          { return "internal error" }
+func (e InternalError) Error() string          { return "internal looser" }
 func (e TxDecodeError) Error() string          { return "tx decode error" }
 func (e InvalidSequenceError) Error() string   { return "invalid sequence error" }
 func (e UnauthorizedError) Error() string      { return "unauthorized error" }
@@ -55,6 +55,7 @@ func (e GasOverflowError) Error() string       { return "gas overflow error" }
 // NOTE also update pkg/std/package.go registrations.
 
 func ErrInternal(msg string) error {
+	panic(msg)
 	return errors.Wrap(InternalError{}, msg)
 }
 
