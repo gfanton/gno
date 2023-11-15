@@ -3,6 +3,7 @@ package events
 import (
 	"log"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -40,10 +41,12 @@ func SubscribeFiltered(evsw EventSwitch, listenerID string, filter EventFilter) 
 }
 
 func SubscribeFilteredOn(evsw EventSwitch, listenerID string, filter EventFilter, ch chan Event) <-chan Event {
+	var onceClose sync.Once
 	evsw.AddListener(listenerID, func(event Event) {
 		if filter != nil && !filter(event) {
 			return // filter
 		}
+
 		// NOTE: This callback must not block for performance.
 		if cap(ch) == 0 {
 			timeout := 10 * time.Second
@@ -53,7 +56,7 @@ func SubscribeFilteredOn(evsw EventSwitch, listenerID string, filter EventFilter
 				case ch <- event:
 					break LOOP
 				case <-evsw.Quit():
-					close(ch)
+					onceClose.Do(func() { close(ch) })
 					break LOOP
 				case <-time.After(timeout):
 					// After a minute, print a message for debugging.
@@ -67,7 +70,7 @@ func SubscribeFilteredOn(evsw EventSwitch, listenerID string, filter EventFilter
 			case ch <- event:
 			default: // async
 				evsw.RemoveListener(listenerID) // TODO log
-				close(ch)
+				onceClose.Do(func() { close(ch) })
 			}
 		}
 	})
