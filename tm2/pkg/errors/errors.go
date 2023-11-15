@@ -8,25 +8,189 @@ import (
 // ----------------------------------------
 // Convenience method.
 
-func Wrap(cause interface{}, format string, args ...interface{}) Error {
-	if causeCmnError, ok := cause.(*cmnError); ok { //nolint:gocritic
-		msg := fmt.Sprintf(format, args...)
-		return causeCmnError.Stacktrace().Trace(1, msg)
-	} else if cause == nil {
-		return newCmnError(FmtError{format, args}).Stacktrace()
+func Wrap(err error, format string, args ...interface{}) Error {
+	const offset = 5
+
+	return wrap(offset, err, format, args...)
+}
+
+func WrapPanic(r interface{}, format string, args ...interface{}) Error {
+	const offset = 5
+
+	err, ok := r.(error)
+	if !ok {
+		err = newStacktraceError(offset, "%v", r)
+	}
+
+	return wrap(offset, err, format, args...)
+}
+
+func wrap(offset int, cause error, format string, args ...interface{}) Error {
+	const depth = 32
+
+	offset += 1 // ignore current call
+
+	serr := newStacktraceError(offset+1, format, args...)
+	// frame, _ := runtime.CallersFrames(stacktrace).Next()
+
+	werr := warpStackError{
+		stackErrors: []Error{serr},
+	}
+
+	if err, ok := cause.(*warpStackError); ok {
+		werr.stackErrors = append(werr.stackErrors, err.stackErrors...)
+	} else if err, ok := cause.(Error); ok {
+		werr.stackErrors = append(werr.stackErrors, err)
 	} else {
-		// NOTE: causeCmnError is a typed nil here.
-		msg := fmt.Sprintf(format, args...)
-		return newCmnError(cause).Stacktrace().Trace(1, msg)
+		err := &emptySackError{cause}
+		werr.stackErrors = append(werr.stackErrors, err)
+	}
+
+	return &werr
+}
+
+type warpStackError struct {
+	err         error
+	stackErrors []Error
+}
+
+func (e *warpStackError) Error() string {
+	var b []byte
+	for i, err := range e.stackErrors {
+		if i > 0 {
+			b = append(b, '\n', '\t')
+		}
+		b = append(b, err.Error()...)
+	}
+	return string(b)
+}
+
+func (e *warpStackError) Unwarp() []error {
+	errs := make([]error, len(e.stackErrors))
+	for i, err := range e.stackErrors {
+		errs[i] = err
+	}
+	return errs
+}
+
+func (werr *warpStackError) Stacktrace() []uintptr {
+	if len(werr.stackErrors) > 0 {
+		return werr.stackErrors[0].Stacktrace()
+	}
+	return []uintptr{}
+}
+
+func (werr *warpStackError) Format(s fmt.State, verb rune) {
+	switch {
+	case verb == 'p':
+		fmt.Fprintf(s, "%p", &werr)
+	case verb == 'v' && s.Flag('+'):
+		// Write msg trace items.
+		for i, err := range werr.stackErrors {
+			stacktrace := err.Stacktrace()
+
+			fmt.Fprintf(s, "[%d] %s:\n", i, err.Error())
+			if len(stacktrace) > 0 {
+				frame, _ := runtime.CallersFrames(stacktrace).Next()
+				fmt.Fprintf(s, "\t\t%s:%d\n", frame.File, frame.Line)
+			}
+		}
+
+	case verb == 'v' && s.Flag('#'):
+		// Write data.
+		for i, err := range werr.stackErrors {
+			if i > 0 {
+				fmt.Fprint(s, "\n")
+			}
+
+			fmt.Fprintf(s, "[%d] %s:\n", i, err.Error())
+
+			stacktrace := err.Stacktrace()
+			frames := runtime.CallersFrames(stacktrace)
+			for j := 0; ; j++ {
+				frame, more := frames.Next()
+				if !more {
+					break
+				}
+
+				fmt.Fprintf(s, "\t%4d %s:%d\n", j, frame.File, frame.Line)
+			}
+		}
+	default:
+		// Write msg.
+		fmt.Fprint(s, werr.Error())
 	}
 }
 
-func Cause(err error) error {
-	if cerr, ok := err.(*cmnError); ok {
-		return cerr.Data().(error)
-	} else {
-		return err
-	}
+type Error interface {
+	Error() string
+	Stacktrace() []uintptr
+}
+
+type stackError struct {
+	msg        string
+	stacktrace []uintptr
+}
+
+func (s *stackError) Error() string {
+	return s.msg
+}
+
+func (s *stackError) String() string {
+	frame, _ := runtime.CallersFrames(s.stacktrace).Next()
+	return fmt.Sprintf("%s:%d - %s", frame.File, frame.Line, s.msg)
+}
+
+func (s *stackError) Stacktrace() []uintptr {
+	return s.stacktrace
+}
+
+func New(format string, args ...interface{}) Error {
+	return newStacktraceError(1, format, args...)
+}
+
+func newStacktraceError(offset int, format string, args ...interface{}) Error {
+	const depth = 32
+
+	offset += 1 // ignore current call
+
+	msg := fmt.Sprintf(format, args...)
+	stacktrace := captureStacktrace(offset+1, depth)
+	return &stackError{msg, stacktrace}
+}
+
+func captureStacktrace(offset int, depth int) []uintptr {
+	offset += 1 // ignore current call
+
+	pcs := make([]uintptr, depth)
+	n := runtime.Callers(offset, pcs)
+	return pcs[0:n]
+}
+
+// type msgtraceItem struct {
+// 	pc  uintptr
+// 	msg string
+// }
+
+// func (mti msgtraceItem) String() string {
+// 	fnc := runtime.FuncForPC(mti.pc)
+// 	file, line := fnc.FileLine(mti.pc)
+// 	return fmt.Sprintf("%s:%d - %s",
+// 		file, line,
+// 		mti.msg,
+// 	)
+// }
+
+type emptySackError struct {
+	err error
+}
+
+func (e *emptySackError) Error() string {
+	return e.err.Error()
+}
+
+func (*emptySackError) Stacktrace() []uintptr {
+	return []uintptr{}
 }
 
 // ----------------------------------------
@@ -53,198 +217,176 @@ Usage with arbitrary error data:
 
 ```
 */
-type Error interface {
-	Error() string
-	Stacktrace() Error
-	Trace(offset int, format string, args ...interface{}) Error
-	Data() interface{}
-}
 
 // New Error with formatted message.
 // The Error's Data will be a FmtError type.
-func New(format string, args ...interface{}) Error {
-	err := FmtError{format, args}
-	return newCmnError(err)
-}
+// func New(format string, args ...interface{}) Error {
+// 	return FmtError{format, args}
+// }
 
-// New Error with specified data.
-func NewWithData(data interface{}) Error {
-	return newCmnError(data)
-}
+// // New Error with specified data.
+// func NewWithData(data interface{}) Error {
+// 	return newCmnError(data)
+// }
 
-type cmnError struct {
-	data       interface{}    // associated data
-	msgtraces  []msgtraceItem // all messages traced
-	stacktrace []uintptr      // first stack trace
-}
+// type cmnError struct {
+// 	data       interface{}    // associated data
+// 	msgtraces  []msgtraceItem // all messages traced
+// 	stacktrace []uintptr      // first stack trace
+// }
 
-var _ Error = &cmnError{}
+// var _ Error = &cmnError{}
 
-// NOTE: do not expose.
-func newCmnError(data interface{}) *cmnError {
-	return &cmnError{
-		data:       data,
-		msgtraces:  nil,
-		stacktrace: nil,
-	}
-}
+// // NOTE: do not expose.
+// func newCmnError(data interface{}) *cmnError {
+// 	return &cmnError{
+// 		data:       data,
+// 		msgtraces:  nil,
+// 		stacktrace: nil,
+// 	}
+// }
 
-// Implements error.
-func (err *cmnError) Error() string {
-	return fmt.Sprintf("%v", err)
-}
+// // Implements error.
+// func (err *cmnError) Error() string {
+// 	return fmt.Sprintf("%v", err)
+// }
 
-// Implements Unwrap method for compat with stdlib errors.Is()/As().
-func (err *cmnError) Unwrap() error {
-	if err.data == nil {
-		return nil
-	}
-	werr, ok := err.data.(error)
-	if !ok {
-		return nil
-	}
-	return werr
-}
+// // Implements Unwrap method for compat with stdlib errors.Is()/As().
+// func (err *cmnError) Unwrap() error {
+// 	if err.data == nil {
+// 		return nil
+// 	}
+// 	werr, ok := err.data.(error)
+// 	if !ok {
+// 		return nil
+// 	}
+// 	return werr
+// }
 
-// Captures a stacktrace if one was not already captured.
-func (err *cmnError) Stacktrace() Error {
-	if err.stacktrace == nil {
-		offset := 3
-		depth := 32
-		err.stacktrace = captureStacktrace(offset, depth)
-	}
-	return err
-}
+// // Captures a stacktrace if one was not already captured.
+// func (err *cmnError) Stacktrace() Error {
+// 	if err.stacktrace == nil {
+// 		offset := 3
+// 		depth := 32
+// 		err.stacktrace = captureStacktrace(offset, depth)
+// 	}
+// 	return err
+// }
 
-// Add tracing information with msg.
-// Set n=0 unless wrapped with some function, then n > 0.
-func (err *cmnError) Trace(offset int, format string, args ...interface{}) Error {
-	msg := fmt.Sprintf(format, args...)
-	return err.doTrace(msg, offset)
-}
+// // Add tracing information with msg.
+// // Set n=0 unless wrapped with some function, then n > 0.
+// func (err *cmnError) Trace(offset int, format string, args ...interface{}) Error {
+// 	msg := fmt.Sprintf(format, args...)
+// 	return err.doTrace(msg, offset)
+// }
 
-// Return the "data" of this error.
-// Data could be used for error handling/switching,
-// or for holding general error/debug information.
-func (err *cmnError) Data() interface{} {
-	return err.data
-}
+// // Return the "data" of this error.
+// // Data could be used for error handling/switching,
+// // or for holding general error/debug information.
+// func (err *cmnError) Data() interface{} {
+// 	return err.data
+// }
 
-func (err *cmnError) doTrace(msg string, n int) Error {
-	// Ignoring linting on `runtime.Caller` for now, as it's
-	// a critical method that can't be currently reworked
-	//nolint:dogsled
-	pc, _, _, _ := runtime.Caller(n + 2) // +1 for doTrace().  +1 for the caller.
-	// Include file & line number & msg.
-	// Do not include the whole stack trace.
-	err.msgtraces = append(err.msgtraces, msgtraceItem{
-		pc:  pc,
-		msg: msg,
-	})
-	return err
-}
+// func (err *cmnError) doTrace(msg string, n int) Error {
+// 	// Ignoring linting on `runtime.Caller` for now, as it's
+// 	// a critical method that can't be currently reworked
+// 	//nolint:dogsled
+// 	pc, _, _, _ := runtime.Caller(n + 2) // +1 for doTrace().  +1 for the caller.
+// 	// Include file & line number & msg.
+// 	// Do not include the whole stack trace.
+// 	err.msgtraces = append(err.msgtraces, msgtraceItem{
+// 		pc:  pc,
+// 		msg: msg,
+// 	})
+// 	return err
+// }
 
-func (err *cmnError) Format(s fmt.State, verb rune) {
-	switch {
-	case verb == 'p':
-		s.Write([]byte(fmt.Sprintf("%p", &err)))
-	case verb == 'v' && s.Flag('+'):
-		s.Write([]byte("--= Error =--\n"))
-		// Write data.
-		fmt.Fprintf(s, "Data: %+v\n", err.data)
-		// Write msg trace items.
-		s.Write([]byte("Msg Traces:\n"))
-		for i, msgtrace := range err.msgtraces {
-			fmt.Fprintf(s, " %4d  %s\n", i, msgtrace.String())
-		}
-		s.Write([]byte("--= /Error =--\n"))
-	case verb == 'v' && s.Flag('#'):
-		s.Write([]byte("--= Error =--\n"))
-		// Write data.
-		fmt.Fprintf(s, "Data: %#v\n", err.data)
-		// Write msg trace items.
-		s.Write([]byte("Msg Traces:\n"))
-		for i, msgtrace := range err.msgtraces {
-			fmt.Fprintf(s, " %4d  %s\n", i, msgtrace.String())
-		}
-		// Write stack trace.
-		if err.stacktrace != nil {
-			s.Write([]byte("Stack Trace:\n"))
-			frames := runtime.CallersFrames(err.stacktrace)
-			for i := 0; ; i++ {
-				frame, more := frames.Next()
-				fmt.Fprintf(s, " %4d  %s:%d\n", i, frame.File, frame.Line)
-				if !more {
-					break
-				}
-			}
-		}
-		s.Write([]byte("--= /Error =--\n"))
-	default:
-		// Write msg.
-		fmt.Fprintf(s, "%v", err.data)
-	}
-}
+// func (err *cmnError) Format(s fmt.State, verb rune) {
+// 	switch {
+// 	case verb == 'p':
+// 		s.Write([]byte(fmt.Sprintf("%p", &err)))
+// 	case verb == 'v' && s.Flag('+'):
+// 		s.Write([]byte("--= Error =--\n"))
+// 		// Write data.
+// 		fmt.Fprintf(s, "Data: %+v\n", err.data)
+// 		// Write msg trace items.
+// 		s.Write([]byte("Msg Traces:\n"))
+// 		for i, msgtrace := range err.msgtraces {
+// 			fmt.Fprintf(s, " %4d  %s\n", i, msgtrace.String())
+// 		}
+// 		s.Write([]byte("--= /Error =--\n"))
+// 	case verb == 'v' && s.Flag('#'):
+// 		s.Write([]byte("--= Error =--\n"))
+// 		// Write data.
+// 		fmt.Fprintf(s, "Data: %#v\n", err.data)
+// 		// Write msg trace items.
+// 		s.Write([]byte("Msg Traces:\n"))
+// 		for i, msgtrace := range err.msgtraces {
+// 			fmt.Fprintf(s, " %4d  %s\n", i, msgtrace.String())
+// 		}
+// 		// Write stack trace.
+// 		if err.stacktrace != nil {
+// 			s.Write([]byte("Stack Trace:\n"))
+// 			frames := runtime.CallersFrames(err.stacktrace)
+// 			for i := 0; ; i++ {
+// 				frame, more := frames.Next()
+// 				fmt.Fprintf(s, " %4d  %s:%d\n", i, frame.File, frame.Line)
+// 				if !more {
+// 					break
+// 				}
+// 			}
+// 		}
+// 		s.Write([]byte("--= /Error =--\n"))
+// 	default:
+// 		// Write msg.
+// 		fmt.Fprintf(s, "%v", err.data)
+// 	}
+// }
 
-// ----------------------------------------
-// stacktrace & msgtraceItem
+// // ----------------------------------------
+// // stacktrace & msgtraceItem
 
-func captureStacktrace(offset int, depth int) []uintptr {
-	pcs := make([]uintptr, depth)
-	n := runtime.Callers(offset, pcs)
-	return pcs[0:n]
-}
+// // ----------------------------------------
+// // fmt error
 
-type msgtraceItem struct {
-	pc  uintptr
-	msg string
-}
+// /*
+// FmtError is the data type for New() (e.g. New().Data().(FmtError))
+// Theoretically it could be used to switch on the format string.
 
-func (mti msgtraceItem) String() string {
-	fnc := runtime.FuncForPC(mti.pc)
-	file, line := fnc.FileLine(mti.pc)
-	return fmt.Sprintf("%s:%d - %s",
-		file, line,
-		mti.msg,
-	)
-}
+// ```go
 
-// ----------------------------------------
-// fmt error
+// 	// Error construction
+// 	var err1 error = New("invalid username %v", "BOB")
+// 	var err2 error = New("another kind of error")
+// 	...
+// 	// Error handling
+// 	switch err1.Data().(cmn.FmtError).Format() {
+// 		case "invalid username %v": ...
+// 		case "another kind of error": ...
+// 	    default: ...
+// 	}
 
-/*
-FmtError is the data type for New() (e.g. New().Data().(FmtError))
-Theoretically it could be used to switch on the format string.
+// ```
+// */
 
-```go
+// type FmtError struct {
+// 	format string
+// 	args   []interface{}
+// }
 
-	// Error construction
-	var err1 error = New("invalid username %v", "BOB")
-	var err2 error = New("another kind of error")
-	...
-	// Error handling
-	switch err1.Data().(cmn.FmtError).Format() {
-		case "invalid username %v": ...
-		case "another kind of error": ...
-	    default: ...
-	}
+// func (fe FmtError) Error() string {
+// 	return fmt.Sprintf(fe.format, fe.args...)
+// }
 
-```
-*/
-type FmtError struct {
-	format string
-	args   []interface{}
-}
+// func (fe FmtError) Unwarp() error {
+// 	return nil
+// }
 
-func (fe FmtError) Error() string {
-	return fmt.Sprintf(fe.format, fe.args...)
-}
+// func (fe FmtError) String() string {
+// 	return fmt.Sprintf("FmtError{format:%v,args:%v}",
+// 		fe.format, fe.args)
+// }
 
-func (fe FmtError) String() string {
-	return fmt.Sprintf("FmtError{format:%v,args:%v}",
-		fe.format, fe.args)
-}
-
-func (fe FmtError) Format() string {
-	return fe.format
-}
+// func (fe FmtError) Format() string {
+// 	return fe.format
+// }
