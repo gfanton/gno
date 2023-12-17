@@ -32,11 +32,11 @@ func TestingLoggerWithOutput(w io.Writer) Logger {
 		return _testingLogger
 	}
 
-	if testing.Verbose() {
-		_testingLogger = NewTMLogger(NewSyncWriter(w))
-	} else {
-		_testingLogger = NewNopLogger()
-	}
+	// if testing.Verbose() {
+	// 	_testingLogger = NewTMLogger(NewSyncWriter(w))
+	// } else {
+	_testingLogger = NewNopLogger()
+	// }
 
 	return _testingLogger
 }
