@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"sync"
@@ -40,12 +41,36 @@ func SubscribeFiltered(evsw EventSwitch, listenerID string, filter EventFilter) 
 	return SubscribeFilteredOn(evsw, listenerID, filter, ch)
 }
 
+var (
+	ms    = make(map[string]int)
+	slock = sync.Mutex{}
+)
+
+func printMap(ms map[string]int) {
+	fmt.Printf("--- \n")
+	for k, v := range ms {
+		fmt.Printf(" [%s: %d]", k, v)
+	}
+	fmt.Printf("--- \n")
+}
+
 func SubscribeFilteredOn(evsw EventSwitch, listenerID string, filter EventFilter, ch chan Event) <-chan Event {
 	var onceClose sync.Once
 	evsw.AddListener(listenerID, func(event Event) {
 		if filter != nil && !filter(event) {
 			return // filter
 		}
+
+		ms[listenerID]++
+		printMap(ms)
+		defer func() {
+			ms[listenerID]--
+			if ms[listenerID] == 0 {
+				delete(ms, listenerID)
+				return
+			}
+			printMap(ms)
+		}()
 
 		// NOTE: This callback must not block for performance.
 		if cap(ch) == 0 {
@@ -56,6 +81,7 @@ func SubscribeFilteredOn(evsw EventSwitch, listenerID string, filter EventFilter
 				case ch <- event:
 					break LOOP
 				case <-evsw.Quit():
+					evsw.RemoveListener(listenerID) // TODO log
 					onceClose.Do(func() { close(ch) })
 					break LOOP
 				case <-time.After(timeout):

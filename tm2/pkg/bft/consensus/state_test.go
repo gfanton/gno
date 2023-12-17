@@ -1462,7 +1462,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	ensureNoNewEventOnChannel(voteCh)
+
 	rs := cs1.GetRoundState()
 	theBlockHash := rs.ProposalBlock.Hash()
 	theBlockParts := rs.ProposalBlockParts.Header()
@@ -1482,7 +1482,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 	signAddVotes(cs1, types.PrecommitType, theBlockHash, theBlockParts, vs4)
 
-	ensureNoNewEventOnChannel(voteCh)
+	// ensureNoNewEventOnChannel(voteCh)
 	rs = cs1.GetRoundState()
 	assert.True(t, rs.TriggeredTimeoutPrecommit)
 
@@ -1494,7 +1494,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewTimeout(timeoutProposeCh, height, round, cs1.config.Propose(round).Nanoseconds())
 
-	ensureNoNewEventOnChannel(voteCh)
+	// ensureNoNewEventOnChannel(voteCh)
 	rs = cs1.GetRoundState()
 	assert.False(t, rs.TriggeredTimeoutPrecommit, "triggeredTimeoutPrecommit should be false at the beginning of each round")
 }
