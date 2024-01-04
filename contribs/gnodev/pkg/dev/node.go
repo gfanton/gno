@@ -11,8 +11,8 @@ import (
 	gno "github.com/gnolang/gno/gnovm/pkg/gnolang"
 	"github.com/gnolang/gno/gnovm/pkg/gnomod"
 	"github.com/gnolang/gno/tm2/pkg/amino"
-	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	"github.com/gnolang/gno/tm2/pkg/bft/node"
+	"github.com/gnolang/gno/tm2/pkg/bft/rpc/client"
 	bft "github.com/gnolang/gno/tm2/pkg/bft/types"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/log"
@@ -33,6 +33,7 @@ const gnoDevChainID = "tendermint_test" // XXX: this is hardcoded and cannot be 
 type Node struct {
 	*node.Node
 
+	client client.Client
 	logger log.Logger
 	pkgs   PkgsMap // path -> pkg
 }
@@ -69,6 +70,7 @@ func NewDevNode(ctx context.Context, logger log.Logger, pkgslist []string) (*Nod
 	if err != nil {
 		return nil, fmt.Errorf("unable to create the node: %w", err)
 	}
+	client := client.NewLocal(node)
 
 	if err := node.Start(); err != nil {
 		return nil, fmt.Errorf("unable to start node: %w", err)
@@ -82,7 +84,9 @@ func NewDevNode(ctx context.Context, logger log.Logger, pkgslist []string) (*Nod
 	}
 
 	return &Node{
-		Node:   node,
+		Node: node,
+
+		client: client,
 		pkgs:   mpkgs,
 		logger: logger,
 	}, nil
@@ -160,7 +164,6 @@ func (d *Node) ReloadAll(ctx context.Context) error {
 }
 
 func (d *Node) Reload(ctx context.Context) error {
-
 	// save current state
 	state, err := d.saveState(ctx)
 	if err != nil {
@@ -190,17 +193,16 @@ func (d *Node) Reload(ctx context.Context) error {
 		return fmt.Errorf("unable to reset the node: %w", err)
 	}
 
+	d.logger.Debug("loading state txs", "len", len(state))
+	success := len(state)
 	for _, tx := range state {
-		// skip empty transaction
-		if len(tx.Msgs) == 0 {
-			continue
-		}
-
 		if err := d.SendTransaction(&tx); err != nil {
-			return fmt.Errorf("unable to send transaction: %w", err)
+			d.logger.Error("unable to send transaction", "error", err)
+			success--
 		}
 	}
 
+	d.logger.Debug("loading state txs done", "loaded", fmt.Sprintf("%d/%d", success, len(state)))
 	return nil
 }
 
@@ -233,6 +235,7 @@ func (d *Node) reset(ctx context.Context, genesis gnoland.GnoGenesisState) error
 		}
 
 		d.Node = node
+		d.client = client.NewLocal(d.Node)
 	}
 
 	// create the node
@@ -275,27 +278,28 @@ func (d *Node) GetLatestBlockNumber() (uint64, error) {
 	return d.getLatestBlockNumber(), nil
 }
 
-// SendTransaction executes a broadcast sync send
+// SendTransaction executes a broadcast commit send
 // of the specified transaction to the chain
 func (d *Node) SendTransaction(tx *std.Tx) error {
-	resCh := make(chan abci.Response, 1)
-
 	aminoTx, err := amino.Marshal(tx)
 	if err != nil {
 		return fmt.Errorf("unable to marshal transaction to amino binary, %w", err)
 	}
 
-	err = d.Node.Mempool().CheckTx(aminoTx, func(res abci.Response) {
-		resCh <- res
-	})
+	// We use BroadcastTxCommit to ensure to have one block with the given tx
+	res, err := d.client.BroadcastTxCommit(aminoTx)
 	if err != nil {
-		return fmt.Errorf("unable to check tx: %w", err)
+		return fmt.Errorf("unable to broadcast transaction commit: %w", err)
 	}
 
-	res := <-resCh
-	r := res.(abci.ResponseCheckTx)
-	if r.Error != nil {
-		return fmt.Errorf("unable to broadcast tx: %w\nLog: %s", r.Error, r.Log)
+	if res.CheckTx.Error != nil {
+		d.logger.Error("check tx error trace", "log", res.CheckTx.Log)
+		return fmt.Errorf("check transaction error: %w", res.CheckTx.Error)
+	}
+
+	if res.DeliverTx.Error != nil {
+		d.logger.Error("deliver tx error trace", "log", res.CheckTx.Log)
+		return fmt.Errorf("deliver transaction error: %w", res.DeliverTx.Error)
 	}
 
 	return nil
