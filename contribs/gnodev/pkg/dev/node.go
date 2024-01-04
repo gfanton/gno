@@ -278,7 +278,7 @@ func (d *Node) GetLatestBlockNumber() (uint64, error) {
 	return d.getLatestBlockNumber(), nil
 }
 
-// SendTransaction executes a broadcast commit send
+// SendTransaction executes a broadcast commit
 // of the specified transaction to the chain
 func (d *Node) SendTransaction(tx *std.Tx) error {
 	aminoTx, err := amino.Marshal(tx)
@@ -322,7 +322,6 @@ func (n *Node) saveState(ctx context.Context) ([]std.Tx, error) {
 			return nil, fmt.Errorf("unable to fetch block transactions, %w", txErr)
 		}
 
-		// Skip empty blocks
 		state = append(state, txs...)
 	}
 
