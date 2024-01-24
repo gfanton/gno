@@ -63,7 +63,6 @@ jobs:
         with:
           go-version: ${{ matrix.goversion }}
       - name: Set environment variables for debug mode
-        # if: ${{ runner.debug == 1 }}
         run: |
           export LOG_PATH_DIR=${{ runner.temp }}/logs-go${{ matrix.goversion }}-${{ matrix.args }}
           mkdir -p $LOG_PATH_DIR
@@ -84,7 +83,6 @@ jobs:
           path: ./tm2/coverage.out
       - name: Upload Debug Logs
         uses: actions/upload-artifact@v3
-        # if:  ${{ always() && runner.debug == 1 }}
         if: always()
         with:
           name: logs-test-go${{ matrix.goversion }}-${{ matrix.args }}
