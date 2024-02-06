@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -26,10 +27,11 @@ type apiCfg struct {
 	listener string
 	realm    string
 	chainID  string
+	gnoHome  string
 }
 
 var defaultApiOptions = &apiCfg{
-	listener: "127.0.0.1:8585",
+	listener: ":8282",
 	remote:   "127.0.0.1:36657",
 	realm:    "",
 	chainID:  "tendermint_test",
@@ -37,7 +39,7 @@ var defaultApiOptions = &apiCfg{
 }
 
 var (
-	DefaultCreator = crypto.MustAddressFromString(integration.DefaultAccount_Address)
+	IntegrationAccountAddress = crypto.MustAddressFromString(integration.DefaultAccount_Address)
 )
 
 func main() {
@@ -60,6 +62,8 @@ func main() {
 }
 
 func (c *apiCfg) RegisterFlags(fs *flag.FlagSet) {
+	defaultGnoHome := gnoenv.HomeDir()
+
 	fs.StringVar(
 		&c.listener,
 		"listen",
@@ -90,55 +94,46 @@ func (c *apiCfg) RegisterFlags(fs *flag.FlagSet) {
 
 	fs.StringVar(
 		&c.address,
-		"address",
+		"name",
 		defaultApiOptions.address,
-		"adress or name",
+		"name or bech32 to load from the keybase",
 	)
 
+	fs.StringVar(
+		&c.gnoHome,
+		"home",
+		defaultGnoHome,
+		"gno home path",
+	)
 }
 
 func execApi(cfg *apiCfg, args []string, io commands.IO) error {
 	logger := log.ZapLoggerToSlog(log.NewZapConsoleLogger(io.Out(), zapcore.DebugLevel))
 
 	home := gnoenv.HomeDir()
-	name := cfg.address
-	if name == "" {
-		return fmt.Errorf("no address given")
-	}
 
-	var signer gnoclient.SignerFromKeybase
-
-	kb, err := keys.NewKeyBaseFromDir(home)
-	if err != nil {
-		return fmt.Errorf("unable to load keybase: %w", err.Error())
-	}
-	signer.Keybase = kb
-
-	signer.Account = name
-	signer.ChainID = "tendermint_test" // XXX: override this
-	// 	ChainID:  chainid, // Chain ID for transaction signing
-
-	if ok, err := kb.HasByNameOrAddress(name); !ok || err != nil {
+	var kb keys.Keybase
+	if cfg.address != "" {
+		var err error
+		kb, err = keys.NewKeyBaseFromDir(home)
 		if err != nil {
-			return fmt.Errorf("invalid name: %w", err)
+			return fmt.Errorf("unable to load keybase: %w", err)
 		}
-
-		return fmt.Errorf("unknown name/address: %q", name)
+	} else {
+		// create a inmemory keybase
+		kb = keys.NewInMemory()
+		kb.CreateAccount(integration.DefaultAccount_Name, integration.DefaultAccount_Seed, "", "", 0, 0)
+		cfg.address = integration.DefaultAccount_Name
 	}
 
-	prompt := fmt.Sprintf("[%s] Enter password:", name)
-	password, err := io.GetPassword(prompt, true)
+	logger.Info("loading account", "name", cfg.address)
+	signer, err := getSignerForAccount(io, kb, cfg)
 	if err != nil {
-		return fmt.Errorf("error while reading password: %w", err)
-	}
-	signer.Password = ""
-
-	if _, err := kb.ExportPrivKeyUnsafe(name, string(password)); err != nil {
-		return fmt.Errorf("invalid password: %w", err)
+		return fmt.Errorf("unable to get signer for account %q: %w", cfg.address, err)
 	}
 
 	client := &gnoclient.Client{
-		Signer:    &signer,
+		Signer:    signer,
 		RPCClient: client.NewHTTP(cfg.remote, "/websocket"),
 	}
 	// funcs, err := makeFuncs(logger, cfg.realm)
@@ -148,7 +143,6 @@ func execApi(cfg *apiCfg, args []string, io commands.IO) error {
 	var server http.Server
 	server.ReadHeaderTimeout = 60 * time.Second
 	server.Handler = proxycl
-	server.Addr = ":8282"
 
 	// fd := &descriptorpb.FileDescriptorProto{
 	// 	Name:    proto.String("dynamic.proto"),
@@ -166,7 +160,44 @@ func execApi(cfg *apiCfg, args []string, io commands.IO) error {
 
 	// fmt.Printf("funcs list: %+v\n", funcs)
 
-	return server.ListenAndServe()
+	l, err := net.Listen("tcp", cfg.listener)
+	if err != nil {
+		return fmt.Errorf("unable to listen on %q: %w", cfg.listener, err)
+	}
+	logger.Info("api listening", "addr", l.Addr())
+
+	return server.Serve(l)
+}
+
+func getSignerForAccount(io commands.IO, kb keys.Keybase, cfg *apiCfg) (gnoclient.Signer, error) {
+	var signer gnoclient.SignerFromKeybase
+
+	signer.Keybase = kb
+	signer.Account = cfg.address
+	signer.ChainID = cfg.chainID // XXX: override this
+	// 	ChainID:  chainid, // Chain ID for transaction signing
+
+	if ok, err := kb.HasByNameOrAddress(cfg.address); !ok || err != nil {
+		if err != nil {
+			return nil, fmt.Errorf("invalid name: %w", err)
+		}
+
+		return nil, fmt.Errorf("unknown name/address: %q", cfg.address)
+	}
+
+	// try empty password first
+	if _, err := kb.ExportPrivKeyUnsafe(cfg.address, ""); err != nil {
+		prompt := fmt.Sprintf("[%.10s] Enter password:", cfg.address)
+		signer.Password, err = io.GetPassword(prompt, true)
+		if err != nil {
+			return nil, fmt.Errorf("error while reading password: %w", err)
+		}
+
+		if _, err := kb.ExportPrivKeyUnsafe(cfg.address, string(signer.Password)); err != nil {
+			return nil, fmt.Errorf("invalid password: %w", err)
+		}
+	}
+	return signer, nil
 }
 
 // Create a dynamic message based on field descriptions
