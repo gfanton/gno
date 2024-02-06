@@ -184,10 +184,8 @@ func (d *Node) Reload(ctx context.Context) error {
 	}
 
 	// Stop the node if it's currently running.
-	if d.Node.IsRunning() {
-		if err := d.Node.Stop(); err != nil {
-			return fmt.Errorf("unable to stop the node: %w", err)
-		}
+	if err := d.stopNodeIfRunning(); err != nil {
+		return fmt.Errorf("unable to stop the node: %w", err)
 	}
 
 	// Load genesis packages
@@ -217,10 +215,8 @@ func (d *Node) Reload(ctx context.Context) error {
 // effectively ignoring the current state.
 func (d *Node) Reset(ctx context.Context) error {
 	// Stop the node if it's currently running.
-	if d.Node.IsRunning() {
-		if err := d.Node.Stop(); err != nil {
-			return fmt.Errorf("unable to stop the node: %w", err)
-		}
+	if err := d.stopNodeIfRunning(); err != nil {
+		return fmt.Errorf("unable to stop node: %W", err)
 	}
 
 	// Generate a new genesis state based on the current packages
@@ -285,6 +281,22 @@ func (d *Node) reset(ctx context.Context, genesis gnoland.GnoGenesisState) error
 	}
 
 	return err
+}
+
+func (d *Node) stopNodeIfRunning() error {
+	// Stop the node if it's currently running.
+	if d.Node.IsRunning() {
+		if err := d.Node.Stop(); err != nil {
+			return fmt.Errorf("unable to stop the node: %w", err)
+		}
+
+		// Close local app
+		if err := d.config.TMConfig.LocalApp.Close(); err != nil {
+			d.logger.Error("unable to close local app", "error", err)
+		}
+	}
+
+	return nil
 }
 
 // GetBlockTransactions returns the transactions contained

@@ -43,12 +43,14 @@ type devCfg struct {
 	noWatch  bool
 	noReplay bool
 	maxGaz   int64
+	db       string
 }
 
 var defaultDevOptions = &devCfg{
 	maxGaz:              10_000_000_000,
 	webListenerAddr:     "127.0.0.1:8888",
 	nodeRPCListenerAddr: "127.0.0.1:36657",
+	db:                  "memdb",
 
 	// As we have no reason to configure this yet, set this to random port
 	// to avoid potential conflict with other app
@@ -125,6 +127,13 @@ func (c *devCfg) RegisterFlags(fs *flag.FlagSet) {
 		"max-gaz",
 		defaultDevOptions.maxGaz,
 		"set the maximum gaz by block",
+	)
+
+	fs.StringVar(
+		&c.db,
+		"db",
+		defaultDevOptions.db,
+		"db backend, should be in the form of <memdb|goleveldb|cleveldb|boltdb>[:path]",
 	)
 }
 
@@ -338,8 +347,8 @@ func setupRawTerm(io commands.IO) (rt *rawterm.RawTerm, restore func() error, er
 // setupDevNode initializes and returns a new DevNode.
 func setupDevNode(ctx context.Context, cfg *devCfg, rt *rawterm.RawTerm, pkgspath []string) (*gnodev.Node, error) {
 	nodeOut := rt.NamespacedWriter("Node")
-
 	zapLogger := log.NewZapConsoleLogger(nodeOut, zapcore.ErrorLevel)
+	logger := log.ZapLoggerToSlog(zapLogger)
 
 	gnoroot := gnoenv.RootDir()
 
@@ -351,11 +360,17 @@ func setupDevNode(ctx context.Context, cfg *devCfg, rt *rawterm.RawTerm, pkgspat
 	config.SkipFailingGenesisTxs = true
 	config.MaxGazPerBlock = cfg.maxGaz
 
+	// DB backend
+	dbbackend, dbpath := parseDB(cfg.db)
+	config.TMConfig.BaseConfig.DBBackend = dbbackend
+	config.TMConfig.BaseConfig.DBPath = dbpath
+	logger.Error("database", "backend", dbbackend, "path", dbpath)
+
 	// other listeners
 	config.TMConfig.P2P.ListenAddress = defaultDevOptions.nodeP2PListenerAddr
 	config.TMConfig.ProxyApp = defaultDevOptions.nodeProxyAppListenerAddr
 
-	return gnodev.NewDevNode(ctx, log.ZapLoggerToSlog(zapLogger), config)
+	return gnodev.NewDevNode(ctx, logger, config)
 }
 
 // setupGnowebServer initializes and starts the Gnoweb server.
@@ -447,4 +462,19 @@ func resolveUnixOrTCPAddr(in string) (out string) {
 
 	panic(err)
 
+}
+
+func parseDB(db string) (backend string, path string) {
+	split := strings.SplitN(db, ":", 2)
+	switch len(split) {
+	case 2:
+		backend = split[0]
+		path = split[1]
+	case 1:
+		backend = split[0]
+	default:
+		panic("unexpected db format arguement")
+	}
+
+	return
 }

@@ -933,6 +933,8 @@ func (app *BaseApp) halt() {
 
 // TODO implement cleanup
 func (app *BaseApp) Close() error {
+	// Close db
+	app.db.Close()
 	return nil // XXX
 }
 

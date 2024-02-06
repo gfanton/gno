@@ -63,6 +63,10 @@ func NewDefaultTMConfig(rootdir string) *tmcfg.Config {
 func NewDefaultInMemoryNodeConfig(rootdir string) *InMemoryNodeConfig {
 	tm := NewDefaultTMConfig(rootdir)
 
+	// enforce in memory database for default configuration
+	tm.DBBackend = "memdb"
+	tm.DBPath = ""
+
 	// Create Mocked Identity
 	pv := NewMockedPrivValidator()
 	genesis := NewDefaultGenesisConfig(pv.GetPubKey(), tm.ChainID())
@@ -110,13 +114,19 @@ func NewInMemoryNode(logger *slog.Logger, cfg *InMemoryNodeConfig) (*node.Node, 
 		return nil, fmt.Errorf("validate config error: %w", err)
 	}
 
+	newDB, err := db.NewDB("gnolang", db.BackendType(cfg.TMConfig.DBBackend), cfg.TMConfig.DBDir())
+	if err != nil {
+		return nil, fmt.Errorf("unable to init database(%q, %q): %w",
+			cfg.TMConfig.DBBackend, cfg.TMConfig.DBDir(), err)
+	}
+
 	// Initialize the application with the provided options
 	gnoApp, err := NewAppWithOptions(&AppOptions{
 		Logger:                logger,
 		GnoRootDir:            cfg.TMConfig.RootDir,
 		SkipFailingGenesisTxs: cfg.SkipFailingGenesisTxs,
 		MaxCycles:             cfg.GenesisMaxVMCycles,
-		DB:                    db.NewMemDB(),
+		DB:                    newDB,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error initializing new app: %w", err)
@@ -135,8 +145,6 @@ func NewInMemoryNode(logger *slog.Logger, cfg *InMemoryNodeConfig) (*node.Node, 
 	// Create genesis factory
 	genProvider := func() (*bft.GenesisDoc, error) { return cfg.Genesis, nil }
 
-	dbProvider := func(*node.DBContext) (db.DB, error) { return db.NewMemDB(), nil }
-
 	// generate p2p node identity
 	// XXX: do we need to configur
 	nodekey := &p2p.NodeKey{PrivKey: ed25519.GenPrivKey()}
@@ -146,7 +154,7 @@ func NewInMemoryNode(logger *slog.Logger, cfg *InMemoryNodeConfig) (*node.Node, 
 		cfg.PrivValidator, nodekey,
 		appClientCreator,
 		genProvider,
-		dbProvider,
+		node.DefaultDBProvider,
 		logger,
 	)
 }
