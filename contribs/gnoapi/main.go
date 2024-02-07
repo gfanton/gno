@@ -25,7 +25,6 @@ type apiCfg struct {
 	remote   string
 	address  string
 	listener string
-	realm    string
 	chainID  string
 	gnoHome  string
 }
@@ -33,7 +32,6 @@ type apiCfg struct {
 var defaultApiOptions = &apiCfg{
 	listener: ":8282",
 	remote:   "127.0.0.1:36657",
-	realm:    "",
 	chainID:  "tendermint_test",
 	address:  "",
 }
@@ -76,13 +74,6 @@ func (c *apiCfg) RegisterFlags(fs *flag.FlagSet) {
 		"remote",
 		defaultApiOptions.remote,
 		"remote node adress",
-	)
-
-	fs.StringVar(
-		&c.realm,
-		"realm",
-		defaultApiOptions.realm,
-		"target realm",
 	)
 
 	fs.StringVar(
@@ -144,22 +135,6 @@ func execApi(cfg *apiCfg, args []string, io commands.IO) error {
 	server.ReadHeaderTimeout = 60 * time.Second
 	server.Handler = proxycl
 
-	// fd := &descriptorpb.FileDescriptorProto{
-	// 	Name:    proto.String("dynamic.proto"),
-	// 	Package: proto.String("dynamic"),
-	// 	// Define syntax, options, etc., as needed.
-	// }
-
-	// service := descriptorpb.ServiceDescriptorProto{}
-	// for _, fun := range funcs {
-
-	// 	fd.Service = append(fd.Service)
-	// 	msg := dynamicpb.NewMessage(desc)
-	// 	fmt.Printf("func: %s\n", msg)
-	// }
-
-	// fmt.Printf("funcs list: %+v\n", funcs)
-
 	l, err := net.Listen("tcp", cfg.listener)
 	if err != nil {
 		return fmt.Errorf("unable to listen on %q: %w", cfg.listener, err)
@@ -199,88 +174,3 @@ func getSignerForAccount(io commands.IO, kb keys.Keybase, cfg *apiCfg) (gnoclien
 	}
 	return signer, nil
 }
-
-// Create a dynamic message based on field descriptions
-// func createDynamicMessage(fs vm.FunctionSignature) *dynamicpb.Message {
-// 	// Create a slice to hold field descriptors
-// 	var fieldDescriptors []*descriptorpb.FieldDescriptorProto
-
-// 	// Iterate over the fields to create field descriptors
-// 	for i, field := range fs.Params {
-// 		// Check if the field is an array
-// 		label := descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL
-// 		if len(field.Type) > 2 && field.Type[:2] == "[]" {
-// 			label = descriptorpb.FieldDescriptorProto_LABEL_REPEATED
-// 			field.Type = field.Type[2:] // Remove the array prefix to handle the base type
-// 		}
-
-// 		var fieldType descriptorpb.FieldDescriptorProto_Type
-// 		switch field.Type {
-// 		case "bool":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_BOOL
-// 		case "string":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_STRING
-// 		case "int":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_INT32
-// 		case "int8":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_BYTES
-// 		case "int16":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_INT32
-// 		case "int32":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_INT32
-// 		case "int64":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_INT64
-// 		case "uint":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_UINT32
-// 		case "uint8":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_INT32
-// 		case "uint16":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_UINT32
-// 		case "uint32":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_UINT32
-// 		case "uint64":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_UINT64
-// 		case "float32":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_FLOAT
-// 		case "float64":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_DOUBLE
-// 		case "bigint":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_UINT64
-// 		case "bigdec":
-// 			fieldType = descriptorpb.FieldDescriptorProto_TYPE_DOUBLE
-// 			// case "<untyped> bigdec":
-// 			// 	return typeid("<untyped> bigdec")
-// 			// case "<untyped> bigint":
-// 			// 	return typeid("<untyped> bigint")
-// 			// case "<untyped> bool":
-// 			// 	return typeid("<untyped> bool")
-// 			// case UntypedRuneType:
-// 			// 	return typeid("<untyped> rune")
-// 			// case "<untyped> string":
-// 			// 	return typeid("<untyped> string")
-// 			// }
-// 		}
-
-// 		fieldDescriptor := &descriptorpb.FieldDescriptorProto{
-// 			Name:   &field.Name,
-// 			Number: proto.Int32(int32(i + 1)), // Field numbers should start at 1
-// 			Type:   &fieldType,
-// 			Label:  &label,
-// 		}
-
-// 		fieldDescriptors = append(fieldDescriptors, fieldDescriptor)
-// 	}
-
-// 	// // Create a dynamic message descriptor from the field descriptors
-// 	// messageDescriptorProto := &descriptorpb.DescriptorProto{
-// 	// 	Name:  proto.String("DynamicMessage"), // You might want to give each message a unique name
-// 	// 	Field: fieldDescriptors,
-// 	// }
-
-// 	// messageDescriptor := dynamicpb.NewMessageType(messageDescriptorProto)
-
-// 	// // Create a new dynamic message instance
-// 	// message := dynamicpb.NewMessage(messageDescriptor)
-
-// 	return nil
-// }
