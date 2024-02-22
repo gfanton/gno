@@ -20,6 +20,7 @@ type MakeCallCfg struct {
 	Send     string
 	PkgPath  string
 	FuncName string
+	Request  string
 	Args     commands.StringArr
 }
 
@@ -66,6 +67,13 @@ func (c *MakeCallCfg) RegisterFlags(fs *flag.FlagSet) {
 	fs.Var(
 		&c.Args,
 		"args",
+		"arguments to contract",
+	)
+
+	fs.StringVar(
+		&c.Request,
+		"request",
+		"",
 		"arguments to contract",
 	)
 }
@@ -118,11 +126,12 @@ func execMakeCall(cfg *MakeCallCfg, args []string, io commands.IO) error {
 
 	// construct msg & tx and marshal.
 	msg := vm.MsgCall{
-		Caller:  caller,
-		Send:    send,
-		PkgPath: cfg.PkgPath,
-		Func:    fnc,
-		Args:    cfg.Args,
+		Caller:      caller,
+		Send:        send,
+		PkgPath:     cfg.PkgPath,
+		Func:        fnc,
+		Args:        cfg.Args,
+		JSONRequest: []byte(cfg.Request),
 	}
 	tx := std.Tx{
 		Msgs:       []std.Msg{msg},
