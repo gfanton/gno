@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"golang.org/x/exp/slog"
 
 	"github.com/gnolang/gno/gno.land/pkg/gnoclient"
 	"github.com/gnolang/gno/gno.land/pkg/sdk/vm"
@@ -21,6 +20,8 @@ import (
 
 type Proxy struct {
 	*gnoclient.Client
+
+	cfg gnoclient.BaseTxCfg
 
 	account     std.BaseAccount
 	accountOnce *sync.Once
@@ -47,7 +48,7 @@ func (p *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	case "GET":
 		err = p.handleGet(res, req)
 	case "POST":
-		err = fmt.Errorf("post request, not implemented")
+		err = p.handlePost(res, req)
 	}
 
 	if err != nil {
@@ -85,30 +86,28 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 
 	realm = strings.TrimSuffix(realm, "."+splitMethod[1])
 
-	var cfg gnoclient.CallCfg
-	cfg.PkgPath = realm
-	cfg.FuncName = splitMethod[1]
+	var cfg gnoclient.BaseTxCfg
+	var call gnoclient.MsgCall
+	call.PkgPath = realm
+	call.FuncName = splitMethod[1]
 
-	funcs, err := p.queryFuncs(realm)
-	if err != nil {
-		return fmt.Errorf("unable to query funcs on %q: %w", realm, err)
-	}
-
-	params, ok := funcs[cfg.FuncName]
-	if !ok {
-		return fmt.Errorf("unknow method name %q", cfg.FuncName)
-	}
-
-	cfg.Args = nil
-	if len(params) > 0 {
-		query := req.URL.Query()
-		args := make([]string, len(params))
-		for i, param := range params {
-			val := query.Get(param.Name)
-			args[i] = val
+	values := map[string]any{}
+	query := req.URL.Query()
+	for key, val := range query {
+		switch len(val) {
+		case 0:
+			continue
+		case 1:
+			values[key] = val[0]
+		default:
+			values[key] = val
 		}
+	}
 
-		cfg.Args = args
+	var err error
+	call.JSONRequest, err = json.Marshal(values)
+	if err != nil {
+		return fmt.Errorf("marshal query to json error: %w", err)
 	}
 
 	account, err := p.getSignerAccount()
@@ -121,7 +120,51 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 	cfg.GasFee = "1000000ugnot"
 	cfg.GasWanted = 2000000
 
-	return p.call(res, cfg)
+	return p.call(res, cfg, call)
+}
+
+func (p *Proxy) handlePost(res http.ResponseWriter, req *http.Request) error {
+	realm := strings.TrimLeft(req.URL.Path, "/")
+	realm = filepath.Clean(realm)
+
+	basename := filepath.Base(realm)
+
+	splitMethod := strings.SplitN(basename, ".", 2)
+	if len(splitMethod) < 2 {
+		// Check for command
+		splitCmd := strings.SplitN(basename, ":", 2)
+		if len(splitCmd) < 2 {
+			return p.render(res, realm)
+		}
+
+		return fmt.Errorf("invalid command")
+	}
+
+	realm = strings.TrimSuffix(realm, "."+splitMethod[1])
+
+	var cfg gnoclient.BaseTxCfg
+	var call gnoclient.MsgCall
+	call.PkgPath = realm
+	call.FuncName = splitMethod[1]
+
+	// Read request body
+	var err error
+	call.JSONRequest, err = io.ReadAll(req.Body)
+	if err != nil {
+		return fmt.Errorf("Error reading request body: %w", err)
+	}
+
+	account, err := p.getSignerAccount()
+	if err != nil {
+		return fmt.Errorf("unable to get signer account: %w", err)
+	}
+
+	cfg.AccountNumber = account.AccountNumber
+	cfg.SequenceNumber = account.Sequence
+	cfg.GasFee = "1000000ugnot"
+	cfg.GasWanted = 2000000
+
+	return p.call(res, cfg, call)
 }
 
 func (p *Proxy) query(w io.Writer, req gnoclient.QueryCfg) error {
@@ -179,18 +222,18 @@ func (p *Proxy) queryFuncs(realm string) (funcsMap, error) {
 	return mfuncs, nil
 }
 
-func (p *Proxy) call(w io.Writer, cfg gnoclient.CallCfg) error {
+func (p *Proxy) call(w io.Writer, cfg gnoclient.BaseTxCfg, call gnoclient.MsgCall) error {
 	p.logger.Info("call",
-		"realm", cfg.PkgPath,
-		"method", cfg.FuncName,
+		"realm", call.PkgPath,
+		"method", call.FuncName,
 		"gazWanted", cfg.GasWanted,
 		"gazFee", cfg.GasFee,
-		"args", cfg.Args)
+		"request", string(call.JSONRequest))
 
-	res, err := p.Call(cfg)
+	res, err := p.Call(cfg, call)
 	if err != nil {
 		p.logTm2Error(err, "unable to make call")
-		return fmt.Errorf("unable to make call on %q: %w", cfg.PkgPath, err)
+		return fmt.Errorf("unable to make call on %q: %w", call.PkgPath, err)
 	}
 
 	if res.DeliverTx.IsErr() {
@@ -201,11 +244,20 @@ func (p *Proxy) call(w io.Writer, cfg gnoclient.CallCfg) error {
 		return p.writeErrorJSON(w, res.CheckTx.ResponseBase)
 	}
 
-	if len(res.CheckTx.Data) > 0 {
-		fmt.Fprintf(w, "data: %s\n", res.CheckTx.Data)
+	res2 := struct {
+		Data    json.RawMessage `json:"data"`
+		GasUsed int64           `json:"gasUsed"`
+	}{
+		Data:    json.RawMessage(res.DeliverTx.Data),
+		GasUsed: res.CheckTx.GasUsed,
 	}
 
-	fmt.Fprintf(w, "gaz used: %d\n", res.CheckTx.GasUsed)
+	ret, err := json.MarshalIndent(res2, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, string(ret))
 	return nil
 }
 
