@@ -25,7 +25,7 @@ func (c Client) Query(cfg QueryCfg) (*ctypes.ResultABCIQuery, error) {
 	}
 	qres, err := c.RPCClient.ABCIQueryWithOptions(cfg.Path, cfg.Data, cfg.ABCIQueryOptions)
 	if err != nil {
-		return nil, errors.Wrap(err, "query error")
+		return nil, fmt.Errorf("query error: %w", err)
 	}
 
 	if qres.Response.Error != nil {
@@ -46,7 +46,7 @@ func (c Client) QueryAccount(addr crypto.Address) (*std.BaseAccount, *ctypes.Res
 
 	qres, err := c.RPCClient.ABCIQuery(path, data)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "query account")
+		return nil, nil, fmt.Errorf("query account: %w", err)
 	}
 	if qres.Response.Data == nil || len(qres.Response.Data) == 0 || string(qres.Response.Data) == "null" {
 		return nil, nil, std.ErrUnknownAddress("unknown address: " + crypto.AddressToBech32(addr))
@@ -71,7 +71,7 @@ func (c Client) QueryAppVersion() (string, *ctypes.ResultABCIQuery, error) {
 
 	qres, err := c.RPCClient.ABCIQuery(path, data)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "query app version")
+		return "", nil, fmt.Errorf("query app version: %w", err)
 	}
 
 	version := string(qres.Response.Value)
@@ -91,7 +91,7 @@ func (c Client) Render(pkgPath string, args string) (string, *ctypes.ResultABCIQ
 
 	qres, err := c.RPCClient.ABCIQuery(path, data)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "query render")
+		return "", nil, fmt.Errorf("query render: %w", err)
 	}
 	if qres.Response.Error != nil {
 		return "", nil, errors.Wrap(qres.Response.Error, "Render failed: log:%s", qres.Response.Log)
@@ -114,7 +114,7 @@ func (c Client) QEval(pkgPath string, expression string) (string, *ctypes.Result
 
 	qres, err := c.RPCClient.ABCIQuery(path, data)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "query qeval")
+		return "", nil, fmt.Errorf("query qeval: %w", err)
 	}
 	if qres.Response.Error != nil {
 		return "", nil, errors.Wrap(qres.Response.Error, "QEval failed: log:%s", qres.Response.Log)

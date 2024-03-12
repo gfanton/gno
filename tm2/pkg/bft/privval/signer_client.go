@@ -21,7 +21,7 @@ var _ types.PrivValidator = (*SignerClient)(nil)
 func NewSignerClient(endpoint *SignerListenerEndpoint) (*SignerClient, error) {
 	if !endpoint.IsRunning() {
 		if err := endpoint.Start(); err != nil {
-			return nil, errors.Wrap(err, "failed to start listener endpoint")
+			return nil, fmt.Errorf("failed to start listener endpoint: %w", err)
 		}
 	}
 

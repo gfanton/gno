@@ -184,7 +184,7 @@ func NewRPCSuccessResponse(id jsonrpcid, res interface{}) RPCResponse {
 		var js []byte
 		js, err := amino.MarshalJSON(res)
 		if err != nil {
-			return RPCInternalError(id, errors.Wrap(err, "Error marshalling response"))
+			return RPCInternalError(id, fmt.Errorf("Error marshalling response: %w", err))
 		}
 		rawMsg = json.RawMessage(js)
 	}

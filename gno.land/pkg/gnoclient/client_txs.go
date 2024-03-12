@@ -232,7 +232,7 @@ func (c Client) signAndBroadcastTxCommit(tx std.Tx, accountNumber, sequenceNumbe
 	if sequenceNumber == 0 || accountNumber == 0 {
 		account, _, err := c.QueryAccount(caller)
 		if err != nil {
-			return nil, errors.Wrap(err, "query account")
+			return nil, fmt.Errorf("query account: %w", err)
 		}
 		accountNumber = account.AccountNumber
 		sequenceNumber = account.Sequence
@@ -245,17 +245,17 @@ func (c Client) signAndBroadcastTxCommit(tx std.Tx, accountNumber, sequenceNumbe
 	}
 	signedTx, err := c.Signer.Sign(signCfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "sign")
+		return nil, fmt.Errorf("sign: %w", err)
 	}
 
 	bz, err := amino.Marshal(signedTx)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshaling tx binary bytes")
+		return nil, fmt.Errorf("marshaling tx binary bytes: %w", err)
 	}
 
 	bres, err := c.RPCClient.BroadcastTxCommit(bz)
 	if err != nil {
-		return nil, errors.Wrap(err, "broadcasting bytes")
+		return nil, fmt.Errorf("broadcasting bytes: %w", err)
 	}
 
 	if bres.CheckTx.IsErr() {

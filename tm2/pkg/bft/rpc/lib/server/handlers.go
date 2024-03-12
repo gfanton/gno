@@ -105,7 +105,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			WriteRPCResponseHTTP(w, types.RPCInvalidRequestError(types.JSONRPCStringID(""), errors.Wrap(err, "error reading request body")))
+			WriteRPCResponseHTTP(w, types.RPCInvalidRequestError(types.JSONRPCStringID(""), fmt.Errorf("error reading request body: %w", err)))
 			return
 		}
 		// if its an empty request (like from a browser),
@@ -124,7 +124,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 			// next, try to unmarshal as a single request
 			var request types.RPCRequest
 			if err := json.Unmarshal(b, &request); err != nil {
-				WriteRPCResponseHTTP(w, types.RPCParseError(types.JSONRPCStringID(""), errors.Wrap(err, "error unmarshalling request")))
+				WriteRPCResponseHTTP(w, types.RPCParseError(types.JSONRPCStringID(""), fmt.Errorf("error unmarshalling request: %w", err)))
 				return
 			}
 			requests = []types.RPCRequest{request}
@@ -152,7 +152,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 			if len(request.Params) > 0 {
 				fnArgs, err := jsonParamsToArgs(rpcFunc, request.Params)
 				if err != nil {
-					responses = append(responses, types.RPCInvalidParamsError(request.ID, errors.Wrap(err, "error converting json params to arguments")))
+					responses = append(responses, types.RPCInvalidParamsError(request.ID, fmt.Errorf("error converting json params to arguments: %w", err)))
 					continue
 				}
 				args = append(args, fnArgs...)
@@ -275,7 +275,7 @@ func makeHTTPHandler(rpcFunc *RPCFunc, logger *slog.Logger) func(http.ResponseWr
 
 		fnArgs, err := httpParamsToArgs(rpcFunc, r)
 		if err != nil {
-			WriteRPCResponseHTTP(w, types.RPCInvalidParamsError(types.JSONRPCStringID(""), errors.Wrap(err, "error converting http params to arguments")))
+			WriteRPCResponseHTTP(w, types.RPCInvalidParamsError(types.JSONRPCStringID(""), fmt.Errorf("error converting http params to arguments: %w", err)))
 			return
 		}
 		args = append(args, fnArgs...)
@@ -650,7 +650,7 @@ func (wsc *wsConnection) readRoutine() {
 			var request types.RPCRequest
 			err = json.Unmarshal(in, &request)
 			if err != nil {
-				wsc.WriteRPCResponse(types.RPCParseError(types.JSONRPCStringID(""), errors.Wrap(err, "error unmarshalling request")))
+				wsc.WriteRPCResponse(types.RPCParseError(types.JSONRPCStringID(""), fmt.Errorf("error unmarshalling request: %w", err)))
 				continue
 			}
 
@@ -673,7 +673,7 @@ func (wsc *wsConnection) readRoutine() {
 			if len(request.Params) > 0 {
 				fnArgs, err := jsonParamsToArgs(rpcFunc, request.Params)
 				if err != nil {
-					wsc.WriteRPCResponse(types.RPCInternalError(request.ID, errors.Wrap(err, "error converting json params to arguments")))
+					wsc.WriteRPCResponse(types.RPCInternalError(request.ID, fmt.Errorf("error converting json params to arguments: %w", err)))
 					continue
 				}
 				args = append(args, fnArgs...)

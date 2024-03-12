@@ -205,7 +205,7 @@ func execServe(cfg *config, args []string, io commands.IO) error {
 	// Parse send amount.
 	send, err := std.ParseCoins(cfg.Send)
 	if err != nil {
-		return errors.Wrap(err, "parsing send coins")
+		return fmt.Errorf("parsing send coins: %w", err)
 	}
 
 	// Parse test-to address. If present, send and quit.
@@ -343,7 +343,7 @@ func sendAmountTo(
 	gaswanted := cfg.GasWanted
 	gasfee, err := std.ParseCoin(cfg.GasFee)
 	if err != nil {
-		return errors.Wrap(err, "parsing gas fee coin")
+		return fmt.Errorf("parsing gas fee coin: %w", err)
 	}
 
 	// construct msg & tx and marshal.
@@ -381,7 +381,7 @@ func sendAmountTo(
 	qres, err := cli.ABCIQueryWithOptions(
 		path, data, opts2)
 	if err != nil {
-		return errors.Wrap(err, "querying")
+		return fmt.Errorf("querying: %w", err)
 	}
 	if qres.Response.Error != nil {
 		fmt.Printf("Log: %s\n",
@@ -425,7 +425,7 @@ func sendAmountTo(
 	// broadcast tx bytes.
 	bres, err := cli.BroadcastTxCommit(txbz)
 	if err != nil {
-		return errors.Wrap(err, "broadcasting bytes")
+		return fmt.Errorf("broadcasting bytes: %w", err)
 	}
 	if bres.CheckTx.IsErr() {
 		return errors.New("transaction failed %#v\nlog %s", bres, bres.CheckTx.Log)

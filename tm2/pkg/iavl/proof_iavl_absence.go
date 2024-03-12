@@ -39,7 +39,7 @@ func IAVLAbsenceOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	var op IAVLAbsenceOp // a bit strange as we'll discard this, but it works.
 	err := cdc.UnmarshalSized(pop.Data, &op)
 	if err != nil {
-		return nil, errors.Wrap(err, "decoding ProofOp.Data into IAVLAbsenceOp")
+		return nil, fmt.Errorf("decoding ProofOp.Data into IAVLAbsenceOp: %w", err)
 	}
 	return NewIAVLAbsenceOp(pop.Key, op.Proof), nil
 }
@@ -70,14 +70,14 @@ func (op IAVLAbsenceOp) Run(args [][]byte) ([][]byte, error) {
 	root := op.Proof.ComputeRootHash()
 	err := op.Proof.Verify(root)
 	if err != nil {
-		return nil, errors.Wrap(err, "computing root hash")
+		return nil, fmt.Errorf("computing root hash: %w", err)
 	}
 	// XXX What is the encoding for keys?
 	// We should decode the key depending on whether it's a string or hex,
 	// maybe based on quotes and 0x prefix?
 	err = op.Proof.VerifyAbsence(op.key)
 	if err != nil {
-		return nil, errors.Wrap(err, "verifying absence")
+		return nil, fmt.Errorf("verifying absence: %w", err)
 	}
 	return [][]byte{root}, nil
 }

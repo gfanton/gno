@@ -10,7 +10,7 @@ import (
 func ConvertAndEncode(hrp string, data []byte) (string, error) {
 	converted, err := bech32.ConvertBits(data, 8, 5, true)
 	if err != nil {
-		return "", errors.Wrap(err, "encoding bech32 failed")
+		return "", fmt.Errorf("encoding bech32 failed: %w", err)
 	}
 	return bech32.Encode(hrp, converted)
 }
@@ -24,11 +24,11 @@ func Encode(hrp string, data []byte) (string, error) {
 func DecodeAndConvert(bech string) (string, []byte, error) {
 	hrp, data, err := bech32.DecodeNoLimit(bech)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "decoding bech32 failed")
+		return "", nil, fmt.Errorf("decoding bech32 failed: %w", err)
 	}
 	converted, err := bech32.ConvertBits(data, 5, 8, false)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "decoding bech32 failed")
+		return "", nil, fmt.Errorf("decoding bech32 failed: %w", err)
 	}
 	return hrp, converted, nil
 }

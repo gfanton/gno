@@ -478,7 +478,7 @@ func NewNode(config *cfg.Config,
 		// FIXME: we should start services inside OnStart
 		privValidator, err = createAndStartPrivValidatorSocketClient(config.PrivValidatorListenAddr, logger)
 		if err != nil {
-			return nil, errors.Wrap(err, "error with private validator socket client")
+			return nil, fmt.Errorf("error with private validator socket client: %w", err)
 		}
 	}
 
@@ -508,7 +508,7 @@ func NewNode(config *cfg.Config,
 	// Make BlockchainReactor
 	bcReactor, err := createBlockchainReactor(config, state, blockExec, blockStore, fastSync, logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create blockchain reactor")
+		return nil, fmt.Errorf("could not create blockchain reactor: %w", err)
 	}
 
 	// Make ConsensusReactor
@@ -519,7 +519,7 @@ func NewNode(config *cfg.Config,
 
 	nodeInfo, err := makeNodeInfo(config, nodeKey, txEventStore, genDoc, state)
 	if err != nil {
-		return nil, errors.Wrap(err, "error making NodeInfo")
+		return nil, fmt.Errorf("error making NodeInfo: %w", err)
 	}
 
 	// Setup Transport.
@@ -534,7 +534,7 @@ func NewNode(config *cfg.Config,
 
 	err = sw.AddPersistentPeers(splitAndTrimEmpty(config.P2P.PersistentPeers, ",", " "))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not add peers from persistent_peers field")
+		return nil, fmt.Errorf("could not add peers from persistent_peers field: %w", err)
 	}
 
 	if config.ProfListenAddress != "" {
@@ -640,7 +640,7 @@ func (n *Node) OnStart() error {
 	// Always connect to persistent peers
 	err = n.sw.DialPeersAsync(splitAndTrimEmpty(n.config.P2P.PersistentPeers, ",", " "))
 	if err != nil {
-		return errors.Wrap(err, "could not dial peers from persistent_peers field")
+		return fmt.Errorf("could not dial peers from persistent_peers field: %w", err)
 	}
 
 	return nil
@@ -903,7 +903,7 @@ func makeNodeInfo(
 	}
 	addr, err := p2p.NewNetAddressFromString(p2p.NetAddressString(nodeKey.ID(), lAddr))
 	if err != nil {
-		return nodeInfo, errors.Wrap(err, "invalid (local) node net address")
+		return nodeInfo, fmt.Errorf("invalid (local) node net address: %w", err)
 	}
 	nodeInfo.NetAddress = addr
 
@@ -967,12 +967,12 @@ func createAndStartPrivValidatorSocketClient(
 ) (types.PrivValidator, error) {
 	pve, err := privval.NewSignerListener(listenAddr, logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start private validator")
+		return nil, fmt.Errorf("failed to start private validator: %w", err)
 	}
 
 	pvsc, err := privval.NewSignerClient(pve)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start private validator")
+		return nil, fmt.Errorf("failed to start private validator: %w", err)
 	}
 
 	return pvsc, nil

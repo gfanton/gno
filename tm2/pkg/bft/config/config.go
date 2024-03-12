@@ -184,16 +184,16 @@ func (cfg *Config) ValidateBasic() error {
 		return err
 	}
 	if err := cfg.RPC.ValidateBasic(); err != nil {
-		return errors.Wrap(err, "Error in [rpc] section")
+		return fmt.Errorf("Error in [rpc] section: %w", err)
 	}
 	if err := cfg.P2P.ValidateBasic(); err != nil {
-		return errors.Wrap(err, "Error in [p2p] section")
+		return fmt.Errorf("Error in [p2p] section: %w", err)
 	}
 	if err := cfg.Mempool.ValidateBasic(); err != nil {
-		return errors.Wrap(err, "Error in [mempool] section")
+		return fmt.Errorf("Error in [mempool] section: %w", err)
 	}
 	if err := cfg.Consensus.ValidateBasic(); err != nil {
-		return errors.Wrap(err, "Error in [consensus] section")
+		return fmt.Errorf("Error in [consensus] section: %w", err)
 	}
 	return nil
 }

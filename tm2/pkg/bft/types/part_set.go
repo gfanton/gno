@@ -33,7 +33,7 @@ func (part *Part) ValidateBasic() error {
 		return errors.New("too big: %d bytes, max: %d", len(part.Bytes), BlockPartSizeBytes)
 	}
 	if err := part.Proof.ValidateBasic(); err != nil {
-		return errors.Wrap(err, "wrong Proof")
+		return fmt.Errorf("wrong Proof: %w", err)
 	}
 	return nil
 }
@@ -79,7 +79,7 @@ func (psh PartSetHeader) ValidateBasic() error {
 	}
 	// Hash can be empty in case of POLBlockID.PartsHeader in Proposal.
 	if err := ValidateHash(psh.Hash); err != nil {
-		return errors.Wrap(err, "Wrong Hash")
+		return fmt.Errorf("Wrong Hash: %w", err)
 	}
 	return nil
 }

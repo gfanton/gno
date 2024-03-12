@@ -118,7 +118,7 @@ func testOutboundPeerConn(
 	var pc peerConn
 	conn, err := testDial(addr, config)
 	if err != nil {
-		return pc, errors.Wrap(err, "Error creating peer")
+		return pc, fmt.Errorf("Error creating peer: %w", err)
 	}
 
 	pc, err = testPeerConn(conn, config, true, persistent, ourNodePrivKey, addr)

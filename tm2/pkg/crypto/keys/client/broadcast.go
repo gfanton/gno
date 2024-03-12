@@ -63,7 +63,7 @@ func execBroadcast(cfg *BroadcastCfg, args []string, io commands.IO) error {
 	var tx std.Tx
 	err = amino.UnmarshalJSON(jsonbz, &tx)
 	if err != nil {
-		return errors.Wrap(err, "unmarshaling tx json bytes")
+		return fmt.Errorf("unmarshaling tx json bytes: %w", err)
 	}
 	cfg.tx = &tx
 
@@ -97,7 +97,7 @@ func BroadcastHandler(cfg *BroadcastCfg) (*ctypes.ResultBroadcastTxCommit, error
 
 	bz, err := amino.Marshal(cfg.tx)
 	if err != nil {
-		return nil, errors.Wrap(err, "remarshaling tx binary bytes")
+		return nil, fmt.Errorf("remarshaling tx binary bytes: %w", err)
 	}
 
 	cli := client.NewHTTP(remote, "/websocket")
@@ -108,7 +108,7 @@ func BroadcastHandler(cfg *BroadcastCfg) (*ctypes.ResultBroadcastTxCommit, error
 
 	bres, err := cli.BroadcastTxCommit(bz)
 	if err != nil {
-		return nil, errors.Wrap(err, "broadcasting bytes")
+		return nil, fmt.Errorf("broadcasting bytes: %w", err)
 	}
 
 	return bres, nil
@@ -117,13 +117,13 @@ func BroadcastHandler(cfg *BroadcastCfg) (*ctypes.ResultBroadcastTxCommit, error
 func SimulateTx(cli client.ABCIClient, tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	bres, err := cli.ABCIQuery(".app/simulate", tx)
 	if err != nil {
-		return nil, errors.Wrap(err, "simulate tx")
+		return nil, fmt.Errorf("simulate tx: %w", err)
 	}
 
 	var result abci.ResponseDeliverTx
 	err = amino.Unmarshal(bres.Response.Value, &result)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshaling simulate result")
+		return nil, fmt.Errorf("unmarshaling simulate result: %w", err)
 	}
 
 	return &ctypes.ResultBroadcastTxCommit{

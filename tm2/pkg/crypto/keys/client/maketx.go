@@ -108,7 +108,7 @@ func SignAndBroadcastHandler(
 	}
 	qres, err := QueryHandler(qopts)
 	if err != nil {
-		return nil, errors.Wrap(err, "query account")
+		return nil, fmt.Errorf("query account: %w", err)
 	}
 	var qret struct{ BaseAccount std.BaseAccount }
 	err = amino.UnmarshalJSON(qres.Response.Data, &qret)
@@ -131,7 +131,7 @@ func SignAndBroadcastHandler(
 
 	signedTx, err := SignHandler(sopts)
 	if err != nil {
-		return nil, errors.Wrap(err, "sign tx")
+		return nil, fmt.Errorf("sign tx: %w", err)
 	}
 
 	// broadcast signed tx
@@ -168,7 +168,7 @@ func ExecSignAndBroadcast(
 
 	bres, err := SignAndBroadcastHandler(cfg, nameOrBech32, tx, pass)
 	if err != nil {
-		return errors.Wrap(err, "broadcast tx")
+		return fmt.Errorf("broadcast tx: %w", err)
 	}
 	if bres.CheckTx.IsErr() {
 		return errors.Wrap(bres.CheckTx.Error, "check transaction failed: log:%s", bres.CheckTx.Log)

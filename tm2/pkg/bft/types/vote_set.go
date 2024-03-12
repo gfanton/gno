@@ -158,9 +158,9 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 
 	// Ensure that validator index was set
 	if valIndex < 0 {
-		return false, errors.Wrap(ErrVoteInvalidValidatorIndex, "Index < 0")
+		return false, fmt.Errorf("Index < 0: %w", ErrVoteInvalidValidatorIndex)
 	} else if len(valAddr) == 0 {
-		return false, errors.Wrap(ErrVoteInvalidValidatorAddress, "Empty address")
+		return false, fmt.Errorf("Empty address: %w", ErrVoteInvalidValidatorAddress)
 	}
 
 	// Make sure the step matches.

@@ -62,7 +62,7 @@ func newBlockchainReactor(logger *slog.Logger, genDoc *types.GenesisDoc, privVal
 	proxyApp := appconn.NewAppConns(cc)
 	err := proxyApp.Start()
 	if err != nil {
-		panic(errors.Wrap(err, "error start app"))
+		panic(fmt.Errorf("error start app: %w", err))
 	}
 
 	blockDB := memdb.NewMemDB()
@@ -71,7 +71,7 @@ func newBlockchainReactor(logger *slog.Logger, genDoc *types.GenesisDoc, privVal
 
 	state, err := sm.LoadStateFromDBOrGenesisDoc(stateDB, genDoc)
 	if err != nil {
-		panic(errors.Wrap(err, "error constructing state from genesis file"))
+		panic(fmt.Errorf("error constructing state from genesis file: %w", err))
 	}
 
 	// Make the BlockchainReactor itself.
@@ -104,7 +104,7 @@ func newBlockchainReactor(logger *slog.Logger, genDoc *types.GenesisDoc, privVal
 
 		state, err = blockExec.ApplyBlock(state, blockID, thisBlock)
 		if err != nil {
-			panic(errors.Wrap(err, "error apply block"))
+			panic(fmt.Errorf("error apply block: %w", err))
 		}
 
 		blockStore.SaveBlock(thisBlock, thisParts, lastCommit)

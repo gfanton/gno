@@ -72,7 +72,7 @@ func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) 
 
 	err := amino.UnmarshalSized(pop.Data, &op)
 	if err != nil {
-		return nil, errors.Wrap(err, "decoding ProofOp.Data into MultiStoreProofOp")
+		return nil, fmt.Errorf("decoding ProofOp.Data into MultiStoreProofOp: %w", err)
 	}
 
 	return NewMultiStoreProofOp(pop.Key, op.Proof), nil

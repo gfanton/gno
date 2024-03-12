@@ -168,7 +168,7 @@ func (m *Machine) Release() {
 
 func (m *Machine) SetActivePackage(pv *PackageValue) {
 	if err := m.CheckEmpty(); err != nil {
-		panic(errors.Wrap(err, "set package when machine not empty"))
+		panic(fmt.Errorf("set package when machine not empty: %w", err))
 	}
 	m.Package = pv
 	m.Realm = pv.GetRealm()

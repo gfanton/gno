@@ -95,14 +95,14 @@ func execMakeSend(cfg *MakeSendCfg, args []string, io commands.IO) error {
 	// Parse send amount.
 	send, err := std.ParseCoins(cfg.Send)
 	if err != nil {
-		return errors.Wrap(err, "parsing send coins")
+		return fmt.Errorf("parsing send coins: %w", err)
 	}
 
 	// parse gas wanted & fee.
 	gaswanted := cfg.RootCfg.GasWanted
 	gasfee, err := std.ParseCoin(cfg.RootCfg.GasFee)
 	if err != nil {
-		return errors.Wrap(err, "parsing gas fee coin")
+		return fmt.Errorf("parsing gas fee coin: %w", err)
 	}
 
 	// construct msg & tx and marshal.

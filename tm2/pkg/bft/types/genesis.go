@@ -175,7 +175,7 @@ func GenesisDocFromJSON(jsonBlob []byte) (*GenesisDoc, error) {
 func GenesisDocFromFile(genDocFile string) (*GenesisDoc, error) {
 	jsonBlob, err := os.ReadFile(genDocFile)
 	if err != nil {
-		return nil, errors.Wrap(err, "Couldn't read GenesisDoc file")
+		return nil, fmt.Errorf("Couldn't read GenesisDoc file: %w", err)
 	}
 	genDoc, err := GenesisDocFromJSON(jsonBlob)
 	if err != nil {

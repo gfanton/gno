@@ -71,7 +71,7 @@ func execMakeRun(cfg *MakeRunCfg, args []string, cmdio commands.IO) error {
 	gaswanted := cfg.RootCfg.GasWanted
 	gasfee, err := std.ParseCoin(cfg.RootCfg.GasFee)
 	if err != nil {
-		return errors.Wrap(err, "parsing gas fee coin")
+		return fmt.Errorf("parsing gas fee coin: %w", err)
 	}
 
 	memPkg := &std.MemPackage{}

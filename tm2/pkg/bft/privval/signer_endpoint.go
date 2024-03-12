@@ -102,7 +102,7 @@ func (se *signerEndpoint) ReadMessage() (msg SignerMessage, err error) {
 		if err != nil {
 			err = errors.Wrap(ErrReadTimeout, err.Error())
 		} else {
-			err = errors.Wrap(ErrReadTimeout, "Empty error")
+			fmt.Errorf("Empty error: %w", ErrReadTimeout)
 		}
 		se.Logger.Debug("Dropping [read]", "obj", se)
 		se.dropConnection()
@@ -117,7 +117,7 @@ func (se *signerEndpoint) WriteMessage(msg SignerMessage) (err error) {
 	defer se.connMtx.Unlock()
 
 	if !se.isConnected() {
-		return errors.Wrap(ErrNoConnection, "endpoint is not connected")
+		return fmt.Errorf("endpoint is not connected: %w", ErrNoConnection)
 	}
 
 	// Reset read deadline
@@ -134,7 +134,7 @@ func (se *signerEndpoint) WriteMessage(msg SignerMessage) (err error) {
 		if err != nil {
 			err = errors.Wrap(ErrWriteTimeout, err.Error())
 		} else {
-			err = errors.Wrap(ErrWriteTimeout, "Empty error")
+			fmt.Errorf("Empty error: %w", ErrWriteTimeout)
 		}
 		se.dropConnection()
 	}

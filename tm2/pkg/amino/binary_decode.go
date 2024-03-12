@@ -447,7 +447,7 @@ func (cdc *Codec) decodeReflectBinaryAny(typeURL string, value []byte, rv reflec
 		)
 		fnum, typ, nFnumTyp3, err = decodeFieldNumberAndTyp3(value)
 		if err != nil {
-			return n, errors.Wrap(err, "could not decode field number and type")
+			return n, fmt.Errorf("could not decode field number and type: %w", err)
 		}
 		if fnum != 1 {
 			return n, fmt.Errorf("expected field number: 1; got: %v", fnum)

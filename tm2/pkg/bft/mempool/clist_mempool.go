@@ -128,11 +128,11 @@ func (mem *CListMempool) InitWAL() {
 	walDir := mem.config.WalDir()
 	err := osm.EnsureDir(walDir, 0o700)
 	if err != nil {
-		panic(errors.Wrap(err, "Error ensuring WAL dir"))
+		panic(fmt.Errorf("Error ensuring WAL dir: %w", err))
 	}
 	af, err := auto.OpenAutoFile(walDir + "/wal")
 	if err != nil {
-		panic(errors.Wrap(err, "Error opening WAL file"))
+		panic(fmt.Errorf("Error opening WAL file: %w", err))
 	}
 	mem.wal = af
 }

@@ -167,14 +167,14 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 
 	for _, in := range inputs {
 		if err := in.ValidateBasic(); err != nil {
-			return errors.Wrap(err, "")
+			return fmt.Errorf(": %w", err)
 		}
 		totalIn = totalIn.Add(in.Coins)
 	}
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
-			return errors.Wrap(err, "")
+			return fmt.Errorf(": %w", err)
 		}
 		totalOut = totalOut.Add(out.Coins)
 	}

@@ -216,7 +216,7 @@ func testPeerConn(
 	// Encrypt connection
 	conn, err = upgradeSecretConn(conn, cfg.HandshakeTimeout, ourNodePrivKey)
 	if err != nil {
-		return pc, errors.Wrap(err, "Error creating peer")
+		return pc, fmt.Errorf("Error creating peer: %w", err)
 	}
 
 	// Only the information we already have

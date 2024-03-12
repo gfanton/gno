@@ -363,7 +363,7 @@ func (kb dbKeybase) ImportPrivKey(
 	}
 	privKey, err := armor.UnarmorDecryptPrivKey(astr, decryptPassphrase)
 	if err != nil {
-		return errors.Wrap(err, "couldn't import private key")
+		return fmt.Errorf("couldn't import private key: %w", err)
 	}
 
 	kb.writeLocalKey(name, privKey, encryptPassphrase)
@@ -381,7 +381,7 @@ func (kb dbKeybase) ImportPrivKeyUnsafe(
 
 	privKey, err := armor.UnarmorPrivateKey(armorStr)
 	if err != nil {
-		return errors.Wrap(err, "couldn't import private key")
+		return fmt.Errorf("couldn't import private key: %w", err)
 	}
 
 	kb.writeLocalKey(name, privKey, encryptPassphrase)

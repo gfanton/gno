@@ -114,7 +114,7 @@ func ParseFile(filename string, body string) (fn *FileNode, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if rerr, ok := r.(error); ok {
-				err = errors.Wrap(rerr, "parsing file")
+				fmt.Errorf("parsing file: %w", rerr)
 			} else {
 				err = errors.New(fmt.Sprintf("%v", r)).Stacktrace()
 			}

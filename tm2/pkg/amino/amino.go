@@ -636,7 +636,7 @@ func (cdc *Codec) unmarshalReflect(bz []byte, ptr interface{}) error {
 		)
 		fnum, typ, nFnumTyp3, err = decodeFieldNumberAndTyp3(bz)
 		if err != nil {
-			return errors.Wrap(err, "could not decode field number and type")
+			return fmt.Errorf("could not decode field number and type: %w", err)
 		}
 		if fnum != 1 {
 			return fmt.Errorf("expected field number: 1; got: %v", fnum)

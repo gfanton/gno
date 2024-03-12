@@ -206,7 +206,7 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 func getLedgerDevice() (LedgerSECP256K1, error) {
 	device, err := discoverLedger()
 	if err != nil {
-		return nil, errors.Wrap(err, "ledger nano S")
+		return nil, fmt.Errorf("ledger nano S: %w", err)
 	}
 
 	return device, nil

@@ -135,7 +135,7 @@ func (c *baseRPCClient) Status() (*ctypes.ResultStatus, error) {
 	result := new(ctypes.ResultStatus)
 	_, err := c.caller.Call("status", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Status")
+		return nil, fmt.Errorf("Status: %w", err)
 	}
 	return result, nil
 }
@@ -144,7 +144,7 @@ func (c *baseRPCClient) ABCIInfo() (*ctypes.ResultABCIInfo, error) {
 	result := new(ctypes.ResultABCIInfo)
 	_, err := c.caller.Call("abci_info", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "ABCIInfo")
+		return nil, fmt.Errorf("ABCIInfo: %w", err)
 	}
 	return result, nil
 }
@@ -159,7 +159,7 @@ func (c *baseRPCClient) ABCIQueryWithOptions(path string, data []byte, opts ABCI
 		map[string]interface{}{"path": path, "data": data, "height": opts.Height, "prove": opts.Prove},
 		result)
 	if err != nil {
-		return nil, errors.Wrap(err, "ABCIQuery")
+		return nil, fmt.Errorf("ABCIQuery: %w", err)
 	}
 	return result, nil
 }
@@ -168,7 +168,7 @@ func (c *baseRPCClient) BroadcastTxCommit(tx types.Tx) (*ctypes.ResultBroadcastT
 	result := new(ctypes.ResultBroadcastTxCommit)
 	_, err := c.caller.Call("broadcast_tx_commit", map[string]interface{}{"tx": tx}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "broadcast_tx_commit")
+		return nil, fmt.Errorf("broadcast_tx_commit: %w", err)
 	}
 	return result, nil
 }
@@ -194,7 +194,7 @@ func (c *baseRPCClient) UnconfirmedTxs(limit int) (*ctypes.ResultUnconfirmedTxs,
 	result := new(ctypes.ResultUnconfirmedTxs)
 	_, err := c.caller.Call("unconfirmed_txs", map[string]interface{}{"limit": limit}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "unconfirmed_txs")
+		return nil, fmt.Errorf("unconfirmed_txs: %w", err)
 	}
 	return result, nil
 }
@@ -203,7 +203,7 @@ func (c *baseRPCClient) NumUnconfirmedTxs() (*ctypes.ResultUnconfirmedTxs, error
 	result := new(ctypes.ResultUnconfirmedTxs)
 	_, err := c.caller.Call("num_unconfirmed_txs", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "num_unconfirmed_txs")
+		return nil, fmt.Errorf("num_unconfirmed_txs: %w", err)
 	}
 	return result, nil
 }
@@ -212,7 +212,7 @@ func (c *baseRPCClient) NetInfo() (*ctypes.ResultNetInfo, error) {
 	result := new(ctypes.ResultNetInfo)
 	_, err := c.caller.Call("net_info", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "NetInfo")
+		return nil, fmt.Errorf("NetInfo: %w", err)
 	}
 	return result, nil
 }
@@ -221,7 +221,7 @@ func (c *baseRPCClient) DumpConsensusState() (*ctypes.ResultDumpConsensusState, 
 	result := new(ctypes.ResultDumpConsensusState)
 	_, err := c.caller.Call("dump_consensus_state", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "DumpConsensusState")
+		return nil, fmt.Errorf("DumpConsensusState: %w", err)
 	}
 	return result, nil
 }
@@ -230,7 +230,7 @@ func (c *baseRPCClient) ConsensusState() (*ctypes.ResultConsensusState, error) {
 	result := new(ctypes.ResultConsensusState)
 	_, err := c.caller.Call("consensus_state", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "ConsensusState")
+		return nil, fmt.Errorf("ConsensusState: %w", err)
 	}
 	return result, nil
 }
@@ -245,7 +245,7 @@ func (c *baseRPCClient) ConsensusParams(height *int64) (*ctypes.ResultConsensusP
 		},
 		result,
 	); err != nil {
-		return nil, errors.Wrap(err, "ConsensusParams")
+		return nil, fmt.Errorf("ConsensusParams: %w", err)
 	}
 
 	return result, nil
@@ -255,7 +255,7 @@ func (c *baseRPCClient) Health() (*ctypes.ResultHealth, error) {
 	result := new(ctypes.ResultHealth)
 	_, err := c.caller.Call("health", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Health")
+		return nil, fmt.Errorf("Health: %w", err)
 	}
 	return result, nil
 }
@@ -266,7 +266,7 @@ func (c *baseRPCClient) BlockchainInfo(minHeight, maxHeight int64) (*ctypes.Resu
 		map[string]interface{}{"minHeight": minHeight, "maxHeight": maxHeight},
 		result)
 	if err != nil {
-		return nil, errors.Wrap(err, "BlockchainInfo")
+		return nil, fmt.Errorf("BlockchainInfo: %w", err)
 	}
 	return result, nil
 }
@@ -275,7 +275,7 @@ func (c *baseRPCClient) Genesis() (*ctypes.ResultGenesis, error) {
 	result := new(ctypes.ResultGenesis)
 	_, err := c.caller.Call("genesis", map[string]interface{}{}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Genesis")
+		return nil, fmt.Errorf("Genesis: %w", err)
 	}
 	return result, nil
 }
@@ -284,7 +284,7 @@ func (c *baseRPCClient) Block(height *int64) (*ctypes.ResultBlock, error) {
 	result := new(ctypes.ResultBlock)
 	_, err := c.caller.Call("block", map[string]interface{}{"height": height}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Block")
+		return nil, fmt.Errorf("Block: %w", err)
 	}
 	return result, nil
 }
@@ -293,7 +293,7 @@ func (c *baseRPCClient) BlockResults(height *int64) (*ctypes.ResultBlockResults,
 	result := new(ctypes.ResultBlockResults)
 	_, err := c.caller.Call("block_results", map[string]interface{}{"height": height}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Block Result")
+		return nil, fmt.Errorf("Block Result: %w", err)
 	}
 	return result, nil
 }
@@ -302,7 +302,7 @@ func (c *baseRPCClient) Commit(height *int64) (*ctypes.ResultCommit, error) {
 	result := new(ctypes.ResultCommit)
 	_, err := c.caller.Call("commit", map[string]interface{}{"height": height}, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Commit")
+		return nil, fmt.Errorf("Commit: %w", err)
 	}
 	return result, nil
 }
@@ -315,7 +315,7 @@ func (c *baseRPCClient) Tx(hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	}
 	_, err := c.caller.Call("tx", params, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Tx")
+		return nil, fmt.Errorf("Tx: %w", err)
 	}
 	return result, nil
 }
@@ -330,7 +330,7 @@ func (c *baseRPCClient) TxSearch(query string, prove bool, page, perPage int) (*
 	}
 	_, err := c.caller.Call("tx_search", params, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "TxSearch")
+		return nil, fmt.Errorf("TxSearch: %w", err)
 	}
 	return result, nil
 }
@@ -343,7 +343,7 @@ func (c *baseRPCClient) Validators(height *int64) (*ctypes.ResultValidators, err
 	}
 	_, err := c.caller.Call("validators", params, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "Validators")
+		return nil, fmt.Errorf("Validators: %w", err)
 	}
 	return result, nil
 }

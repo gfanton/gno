@@ -278,7 +278,7 @@ func (c *WSClient) reconnect() error {
 		attempt++
 
 		if attempt > c.maxReconnectAttempts {
-			return errors.Wrap(err, "reached maximum reconnect attempts")
+			return fmt.Errorf("reached maximum reconnect attempts: %w", err)
 		}
 	}
 }

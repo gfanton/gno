@@ -669,7 +669,7 @@ func (sh SignedHeader) ValidateBasic(chainID string) error {
 	// ValidateBasic on the Commit.
 	err := sh.Commit.ValidateBasic()
 	if err != nil {
-		return errors.Wrap(err, "commit.ValidateBasic failed during SignedHeader.ValidateBasic")
+		return fmt.Errorf("commit.ValidateBasic failed during SignedHeader.ValidateBasic: %w", err)
 	}
 	return nil
 }

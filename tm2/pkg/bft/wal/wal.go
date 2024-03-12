@@ -102,7 +102,7 @@ var _ WAL = &baseWAL{}
 func NewWAL(walFile string, maxSize int64, groupOptions ...func(*auto.Group)) (*baseWAL, error) {
 	err := osm.EnsureDir(filepath.Dir(walFile), 0o700)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to ensure WAL directory is in place")
+		return nil, fmt.Errorf("failed to ensure WAL directory is in place: %w", err)
 	}
 
 	group, err := auto.OpenGroup(walFile, groupOptions...)

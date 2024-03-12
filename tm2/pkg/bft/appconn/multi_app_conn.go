@@ -70,33 +70,33 @@ func (app *multi) OnStart() error {
 	// query connection
 	querycli, err := app.clientCreator.NewABCIClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating ABCI client (query connection)")
+		return fmt.Errorf("Error creating ABCI client (query connection): %w", err)
 	}
 	querycli.SetLogger(app.Logger.With("module", "abci-client", "connection", "query"))
 	if err := querycli.Start(); err != nil {
-		return errors.Wrap(err, "Error starting ABCI client (query connection)")
+		return fmt.Errorf("Error starting ABCI client (query connection): %w", err)
 	}
 	app.queryConn = NewQuery(querycli)
 
 	// mempool connection
 	memcli, err := app.clientCreator.NewABCIClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating ABCI client (mempool connection)")
+		return fmt.Errorf("Error creating ABCI client (mempool connection): %w", err)
 	}
 	memcli.SetLogger(app.Logger.With("module", "abci-client", "connection", "mempool"))
 	if err := memcli.Start(); err != nil {
-		return errors.Wrap(err, "Error starting ABCI client (mempool connection)")
+		return fmt.Errorf("Error starting ABCI client (mempool connection): %w", err)
 	}
 	app.mempoolConn = NewMempool(memcli)
 
 	// consensus connection
 	concli, err := app.clientCreator.NewABCIClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating ABCI client (consensus connection)")
+		return fmt.Errorf("Error creating ABCI client (consensus connection): %w", err)
 	}
 	concli.SetLogger(app.Logger.With("module", "abci-client", "connection", "consensus"))
 	if err := concli.Start(); err != nil {
-		return errors.Wrap(err, "Error starting ABCI client (consensus connection)")
+		return fmt.Errorf("Error starting ABCI client (consensus connection): %w", err)
 	}
 	app.consensusConn = NewConsensus(concli)
 

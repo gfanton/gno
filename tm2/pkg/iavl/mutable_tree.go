@@ -424,7 +424,7 @@ func (tree *MutableTree) DeleteVersion(version int64) error {
 		return errors.New("cannot delete latest saved version (%d)", version)
 	}
 	if !tree.VersionExists(version) {
-		return errors.Wrap(ErrVersionDoesNotExist, "")
+		return fmt.Errorf(": %w", ErrVersionDoesNotExist)
 	}
 
 	tree.ndb.DeleteVersion(version, true)
@@ -446,7 +446,7 @@ func (tree *MutableTree) deleteVersionsFrom(version int64) error {
 			return errors.New("cannot delete latest saved version (%d)", version)
 		}
 		if !tree.VersionExists(version) {
-			return errors.Wrap(ErrVersionDoesNotExist, "")
+			return fmt.Errorf(": %w", ErrVersionDoesNotExist)
 		}
 		tree.ndb.DeleteVersion(version, false)
 	}

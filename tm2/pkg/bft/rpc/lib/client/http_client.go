@@ -349,10 +349,10 @@ func unmarshalResponseBytes(responseBytes []byte, expectedID types.JSONRPCString
 	response := &types.RPCResponse{}
 	err = json.Unmarshal(responseBytes, response)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshalling rpc response")
+		return nil, fmt.Errorf("error unmarshalling rpc response: %w", err)
 	}
 	if response.Error != nil {
-		return nil, errors.Wrap(response.Error, "response error")
+		return nil, fmt.Errorf("response error: %w", response.Error)
 	}
 	// From the JSON-RPC 2.0 spec:
 	//  id: It MUST be the same as the value of the id member in the Request Object.
@@ -362,7 +362,7 @@ func unmarshalResponseBytes(responseBytes []byte, expectedID types.JSONRPCString
 	// Unmarshal the RawMessage into the result.
 	err = amino.UnmarshalJSON(response.Result, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshalling rpc response result")
+		return nil, fmt.Errorf("error unmarshalling rpc response result: %w", err)
 	}
 	return result, nil
 }
@@ -374,7 +374,7 @@ func unmarshalResponseBytesArray(responseBytes []byte, expectedID types.JSONRPCS
 	)
 	err = json.Unmarshal(responseBytes, &responses)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshalling rpc response")
+		return nil, fmt.Errorf("error unmarshalling rpc response: %w", err)
 	}
 	// No response error checking here as there may be a mixture of successful
 	// and unsuccessful responses.
@@ -391,7 +391,7 @@ func unmarshalResponseBytesArray(responseBytes []byte, expectedID types.JSONRPCS
 			return nil, errors.Wrap(err, "failed to validate response ID in response %d", i)
 		}
 		if err := amino.UnmarshalJSON(responses[i].Result, results[i]); err != nil {
-			return nil, errors.Wrap(err, "error unmarshalling rpc response result")
+			return nil, fmt.Errorf("error unmarshalling rpc response result: %w", err)
 		}
 	}
 	return results, nil

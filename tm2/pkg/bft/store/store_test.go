@@ -53,7 +53,7 @@ func makeStateAndBlockStore(logger *slog.Logger) (sm.State, *BlockStore, cleanup
 	stateDB := memdb.NewMemDB()
 	state, err := sm.LoadStateFromDBOrGenesisFile(stateDB, config.GenesisFile())
 	if err != nil {
-		panic(errors.Wrap(err, "error constructing state from genesis file"))
+		panic(fmt.Errorf("error constructing state from genesis file: %w", err))
 	}
 	return state, NewBlockStore(blockDB), func() { os.RemoveAll(config.RootDir) }
 }
