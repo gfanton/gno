@@ -37,7 +37,7 @@ type FSDB struct {
 func NewFSDB(dir string) *FSDB {
 	err := os.MkdirAll(dir, dirPerm)
 	if err != nil {
-		panic(errors.Wrap(err, "Creating FSDB dir "+dir))
+		panic(fmt.Errorf("Creating FSDB dir %s: %w", dir, err))
 	}
 	database := &FSDB{
 		dir: dir,
@@ -55,7 +55,7 @@ func (db *FSDB) Get(key []byte) []byte {
 	if os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
-		panic(errors.Wrap(err, "Getting key %s (0x%X)", string(key), key))
+		panic(fmt.Errorf("Getting key %s (0x%X): %w", string(key), key, err))
 	}
 	return value
 }
@@ -95,7 +95,7 @@ func (db *FSDB) SetNoLock(key []byte, value []byte) {
 	path := db.nameToPath(key)
 	err := write(path, value)
 	if err != nil {
-		panic(errors.Wrap(err, "Setting key %s (0x%X)", string(key), key))
+		panic(fmt.Errorf("Setting key %s (0x%X): %w", string(key), key, err))
 	}
 }
 
@@ -121,7 +121,7 @@ func (db *FSDB) DeleteNoLock(key []byte) {
 	if os.IsNotExist(err) {
 		return
 	} else if err != nil {
-		panic(errors.Wrap(err, "Removing key %s (0x%X)", string(key), key))
+		panic(fmt.Errorf("Removing key %s (0x%X): %w", string(key), key, err))
 	}
 }
 
@@ -168,7 +168,7 @@ func (db *FSDB) MakeIterator(start, end []byte, isReversed bool) db.Iterator {
 	// Not the best, but probably not a bottleneck depending.
 	keys, err := list(db.dir, start, end)
 	if err != nil {
-		panic(errors.Wrap(err, "Listing keys in %s", db.dir))
+		panic(fmt.Errorf("Listing keys in %q: %w", db.dir, err))
 	}
 	if isReversed {
 		sort.Sort(sort.Reverse(sort.StringSlice(keys)))

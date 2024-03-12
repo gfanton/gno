@@ -1,6 +1,7 @@
 package std
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gnolang/gno/tm2/pkg/errors"
@@ -19,11 +20,11 @@ func ParseGasPrice(gasprice string) (GasPrice, error) {
 	}
 	price, err := ParseCoin(parts[0])
 	if err != nil {
-		return GasPrice{}, errors.Wrap(err, "invalid gas price: %s (invalid price)", gasprice)
+		return GasPrice{}, fmt.Errorf("invalid gas price: %s (invalid price): %w", gasprice, err)
 	}
 	gas, err := ParseCoin(parts[1])
 	if err != nil {
-		return GasPrice{}, errors.Wrap(err, "invalid gas price: %s (invalid gas denom)", gasprice)
+		return GasPrice{}, fmt.Errorf("invalid gas price: %s (invalid gas denom): %w", gasprice, err)
 	}
 	if gas.Denom != "gas" {
 		return GasPrice{}, errors.New("invalid gas price: %s (invalid gas denom)", gasprice)
@@ -43,7 +44,7 @@ func ParseGasPrices(gasprices string) (res []GasPrice, err error) {
 	for i, part := range parts {
 		res[i], err = ParseGasPrice(part)
 		if err != nil {
-			return nil, errors.Wrap(err, "invalid gas prices: %s", gasprices)
+			return nil, fmt.Errorf("invalid gas prices: %s: %w", gasprices, err)
 		}
 	}
 	return res, nil

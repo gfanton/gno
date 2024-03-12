@@ -273,7 +273,7 @@ func (proof *RangeProof) _computeRootHash() (rootHash []byte, treeEnd bool, err 
 				return nil, treeEnd, false, fmt.Errorf("recursive COMPUTEHASH call: %w", err)
 			}
 			if !bytes.Equal(derivedRoot, lpath.Right) {
-				return nil, treeEnd, false, errors.Wrap(ErrInvalidRoot, "intermediate root hash %X doesn't match, got %X", lpath.Right, derivedRoot)
+				return nil, treeEnd, false, fmt.Errorf("intermediate root hash %X doesn't match, got %X: %w", lpath.Right, derivedRoot, ErrInvalidRoot)
 			}
 			if done {
 				return hash, treeEnd, true, nil

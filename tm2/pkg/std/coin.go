@@ -659,7 +659,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 
 	amount, err := strconv.ParseInt(amountStr, 10, 64)
 	if err != nil {
-		return Coin{}, errors.Wrap(err, "failed to parse coin amount: %s", amountStr)
+		return Coin{}, fmt.Errorf("failed to parse coin amount: %s: %w", amountStr, err)
 	}
 
 	if err := validateDenom(denomStr); err != nil {

@@ -1,6 +1,10 @@
 package vm
 
-import "github.com/gnolang/gno/tm2/pkg/errors"
+import (
+	"fmt"
+
+	"github.com/gnolang/gno/tm2/pkg/errors"
+)
 
 // for convenience:
 type abciError struct{}
@@ -20,13 +24,13 @@ func (e InvalidStmtError) Error() string    { return "invalid statement" }
 func (e InvalidExprError) Error() string    { return "invalid expression" }
 
 func ErrInvalidPkgPath(msg string) error {
-	return errors.Wrap(InvalidPkgPathError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidPkgPathError{})
 }
 
 func ErrInvalidStmt(msg string) error {
-	return errors.Wrap(InvalidStmtError{}, msg)
+	return errors.Wrap("%s: %w", msg, InvalidStmtError{})
 }
 
 func ErrInvalidExpr(msg string) error {
-	return errors.Wrap(InvalidExprError{}, msg)
+	return errors.Wrap("%s: %w", msg, InvalidExprError{})
 }

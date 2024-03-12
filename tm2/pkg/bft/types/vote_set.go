@@ -9,7 +9,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/bitarray"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 const (
@@ -167,23 +166,23 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 	if (vote.Height != voteSet.height) ||
 		(vote.Round != voteSet.round) ||
 		(vote.Type != voteSet.type_) {
-		return false, errors.Wrap(ErrVoteUnexpectedStep, "Expected %d/%d/%d, but got %d/%d/%d",
+		return false, fmt.Errorf("Expected %d/%d/%d, but got %d/%d/%d: %w",
 			voteSet.height, voteSet.round, voteSet.type_,
-			vote.Height, vote.Round, vote.Type)
+			vote.Height, vote.Round, vote.Type, ErrVoteUnexpectedStep)
 	}
 
 	// Ensure that signer is a validator.
 	lookupAddr, val := voteSet.valSet.GetByIndex(valIndex)
 	if val == nil {
-		return false, errors.Wrap(ErrVoteInvalidValidatorIndex,
-			"Cannot find validator %d in valSet of size %d", valIndex, voteSet.valSet.Size())
+		return false, fmt.Errorf("Cannot find validator %d in valSet of size %d: %w", valIndex, voteSet.valSet.Size(),
+			ErrVoteInvalidValidatorIndex)
 	}
 
 	// Ensure that the signer has the right address.
 	if valAddr != lookupAddr {
-		return false, errors.Wrap(ErrVoteInvalidValidatorAddress,
-			"vote.ValidatorAddress (%X) does not match address (%X) for vote.ValidatorIndex (%d)\nEnsure the genesis file is correct across all validators.",
-			valAddr, lookupAddr, valIndex)
+		return false, fmt.Errorf(
+			"vote.ValidatorAddress (%X) does not match address (%X) for vote.ValidatorIndex (%d)\nEnsure the genesis file is correct across all validators.: %w",
+			valAddr, lookupAddr, valIndex, ErrVoteInvalidValidatorAddress)
 	}
 
 	// If we already know of this vote, return false.
@@ -191,12 +190,12 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 		if bytes.Equal(existing.Signature, vote.Signature) {
 			return false, nil // duplicate
 		}
-		return false, errors.Wrap(ErrVoteNonDeterministicSignature, "Existing vote: %v; New vote: %v", existing, vote)
+		return false, fmt.Errorf("Existing vote: %v; New vote: %v: %w", existing, vote, ErrVoteNonDeterministicSignature)
 	}
 
 	// Check signature.
 	if err := vote.Verify(voteSet.chainID, val.PubKey); err != nil {
-		return false, errors.Wrap(err, "Failed to verify vote with ChainID %s and PubKey %s", voteSet.chainID, val.PubKey)
+		return false, fmt.Errorf("Failed to verify vote with ChainID %q and PubKey %q: %w", voteSet.chainID, val.PubKey, err)
 	}
 
 	// Add vote and get conflicting vote if any.
@@ -207,6 +206,7 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 	if !added {
 		panic("Expected to add non-conflicting vote")
 	}
+
 	return added, nil
 }
 

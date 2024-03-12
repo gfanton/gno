@@ -58,7 +58,7 @@ func execBroadcast(cfg *BroadcastCfg, args []string, io commands.IO) error {
 
 	jsonbz, err := os.ReadFile(filename)
 	if err != nil {
-		return errors.Wrap(err, "reading tx document file "+filename)
+		return fmt.Errorf("reading tx document file %s: %w", filename, err)
 	}
 	var tx std.Tx
 	err = amino.UnmarshalJSON(jsonbz, &tx)

@@ -1,8 +1,6 @@
 package std
 
-import (
-	"github.com/gnolang/gno/tm2/pkg/errors"
-)
+import "fmt"
 
 // for convenience:
 type abciError struct{}
@@ -55,73 +53,73 @@ func (e GasOverflowError) Error() string       { return "gas overflow error" }
 // NOTE also update pkg/std/package.go registrations.
 
 func ErrInternal(msg string) error {
-	return errors.Wrap(InternalError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InternalError{})
 }
 
 func ErrTxDecode(msg string) error {
-	return errors.Wrap(TxDecodeError{}, msg)
+	return fmt.Errorf("%s: %w", msg, TxDecodeError{})
 }
 
 func ErrInvalidSequence(msg string) error {
-	return errors.Wrap(InvalidSequenceError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidSequenceError{})
 }
 
 func ErrUnauthorized(msg string) error {
-	return errors.Wrap(UnauthorizedError{}, msg)
+	return fmt.Errorf("%s: %w", msg, UnauthorizedError{})
 }
 
 func ErrInsufficientFunds(msg string) error {
-	return errors.Wrap(InsufficientFundsError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InsufficientFundsError{})
 }
 
 func ErrUnknownRequest(msg string) error {
-	return errors.Wrap(UnknownRequestError{}, msg)
+	return fmt.Errorf("%s: %w", msg, UnknownRequestError{})
 }
 
 func ErrInvalidAddress(msg string) error {
-	return errors.Wrap(InvalidAddressError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidAddressError{})
 }
 
 func ErrUnknownAddress(msg string) error {
-	return errors.Wrap(UnknownAddressError{}, msg)
+	return fmt.Errorf("%s: %w", msg, UnknownAddressError{})
 }
 
 func ErrInvalidPubKey(msg string) error {
-	return errors.Wrap(InvalidPubKeyError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidPubKeyError{})
 }
 
 func ErrInsufficientCoins(msg string) error {
-	return errors.Wrap(InsufficientCoinsError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InsufficientCoinsError{})
 }
 
 func ErrInvalidCoins(msg string) error {
-	return errors.Wrap(InvalidCoinsError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidCoinsError{})
 }
 
 func ErrInvalidGasWanted(msg string) error {
-	return errors.Wrap(InvalidGasWantedError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InvalidGasWantedError{})
 }
 
 func ErrOutOfGas(msg string) error {
-	return errors.Wrap(OutOfGasError{}, msg)
+	return fmt.Errorf("%s: %w", msg, OutOfGasError{})
 }
 
 func ErrMemoTooLarge(msg string) error {
-	return errors.Wrap(MemoTooLargeError{}, msg)
+	return fmt.Errorf("%s: %w", msg, MemoTooLargeError{})
 }
 
 func ErrInsufficientFee(msg string) error {
-	return errors.Wrap(InsufficientFeeError{}, msg)
+	return fmt.Errorf("%s: %w", msg, InsufficientFeeError{})
 }
 
 func ErrTooManySignatures(msg string) error {
-	return errors.Wrap(TooManySignaturesError{}, msg)
+	return fmt.Errorf("%s: %w", msg, TooManySignaturesError{})
 }
 
 func ErrNoSignatures(msg string) error {
-	return errors.Wrap(NoSignaturesError{}, msg)
+	return fmt.Errorf("%s: %w", msg, NoSignaturesError{})
 }
 
 func ErrGasOverflow(msg string) error {
-	return errors.Wrap(GasOverflowError{}, msg)
+	return fmt.Errorf("%s: %w", msg, GasOverflowError{})
 }
