@@ -73,9 +73,9 @@ func execBroadcast(cfg *BroadcastCfg, args []string, io commands.IO) error {
 	}
 
 	if res.CheckTx.IsErr() {
-		return errors.New("transaction failed %#v\nlog %s", res, res.CheckTx.Log)
+		return fmt.Errorf("transaction failed %#v\nlog %s", res, res.CheckTx.Log)
 	} else if res.DeliverTx.IsErr() {
-		return errors.New("transaction failed %#v\nlog %s", res, res.DeliverTx.Log)
+		return fmt.Errorf("transaction failed %#v\nlog %s", res, res.DeliverTx.Log)
 	} else {
 		io.Println(string(res.DeliverTx.Data))
 		io.Println("OK!")

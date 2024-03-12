@@ -475,7 +475,7 @@ func (cdc *Codec) UnmarshalSized(bz []byte, ptr interface{}) error {
 	// Read byte-length prefix.
 	u64, n := binary.Uvarint(bz)
 	if n < 0 {
-		return errors.New("Error reading msg byte-length prefix: got code %v", n)
+		return fmt.Errorf("Error reading msg byte-length prefix: got code %v", n)
 	}
 	if u64 > uint64(len(bz)-n) {
 		return errors.New("Not enough bytes to read in UnmarshalSized, want %v more bytes but only have %v",
@@ -525,7 +525,7 @@ func (cdc *Codec) UnmarshalSizedReader(r io.Reader, ptr interface{},
 	}
 	if maxSize > 0 {
 		if uint64(maxSize) < u64 {
-			err = errors.New("read overflow, maxSize is %v but this amino binary object is %v bytes", maxSize, u64)
+			err = fmt.Errorf("read overflow, maxSize is %v but this amino binary object is %v bytes", maxSize, u64)
 			return
 		}
 		if (maxSize - n) < int64(u64) {
@@ -573,7 +573,7 @@ func (cdc *Codec) UnmarshalAnySized(bz []byte, ptr interface{}) error {
 	// Read byte-length prefix.
 	u64, n := binary.Uvarint(bz)
 	if n < 0 {
-		return errors.New("Error reading msg byte-length prefix: got code %v", n)
+		return fmt.Errorf("Error reading msg byte-length prefix: got code %v", n)
 	}
 	if u64 > uint64(len(bz)-n) {
 		return errors.New("Not enough bytes to read in UnmarshalAnySized, want %v more bytes but only have %v",

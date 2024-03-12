@@ -39,7 +39,7 @@ func NewSimpleValueOp(key []byte, proof *SimpleProof) SimpleValueOp {
 
 func SimpleValueOpDecoder(pop ProofOp) (ProofOperator, error) {
 	if pop.Type != ProofOpSimpleValue {
-		return nil, errors.New("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpSimpleValue)
+		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpSimpleValue)
 	}
 	var op SimpleValueOp // a bit strange as we'll discard this, but it works.
 	err := cdc.UnmarshalSized(pop.Data, &op)
@@ -64,7 +64,7 @@ func (op SimpleValueOp) String() string {
 
 func (op SimpleValueOp) Run(args [][]byte) ([][]byte, error) {
 	if len(args) != 1 {
-		return nil, errors.New("expected 1 arg, got %v", len(args))
+		return nil, fmt.Errorf("expected 1 arg, got %v", len(args))
 	}
 	value := args[0]
 	hasher := tmhash.New()
@@ -78,7 +78,7 @@ func (op SimpleValueOp) Run(args [][]byte) ([][]byte, error) {
 	kvhash := leafHash(bz.Bytes())
 
 	if !bytes.Equal(kvhash, op.Proof.LeafHash) {
-		return nil, errors.New("leaf hash mismatch: want %X got %X", op.Proof.LeafHash, kvhash)
+		return nil, fmt.Errorf("leaf hash mismatch: want %X got %X", op.Proof.LeafHash, kvhash)
 	}
 
 	return [][]byte{

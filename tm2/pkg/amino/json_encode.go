@@ -151,7 +151,7 @@ func (cdc *Codec) encodeReflectJSONInterface(w io.Writer, iinfo *TypeInfo, rv re
 		return
 	}
 	if !cinfo.Registered {
-		err = errors.New("cannot encode unregistered concrete type %v", crt)
+		err = fmt.Errorf("cannot encode unregistered concrete type %v", crt)
 		return
 	}
 
@@ -166,7 +166,7 @@ func (cdc *Codec) encodeReflectJSONInterface(w io.Writer, iinfo *TypeInfo, rv re
 	if cinfo.IsJSONAnyValueType || (cinfo.IsAminoMarshaler && cinfo.ReprType.IsJSONAnyValueType) {
 		// Sanity check
 		if value[0] == '{' || value[len(value)-1] == '}' {
-			err = errors.New("unexpected JSON object %s", value)
+			err = fmt.Errorf("unexpected JSON object %s", value)
 			return
 		}
 		// Write TypeURL
@@ -185,7 +185,7 @@ func (cdc *Codec) encodeReflectJSONInterface(w io.Writer, iinfo *TypeInfo, rv re
 	} else {
 		// Sanity check
 		if value[0] != '{' || value[len(value)-1] != '}' {
-			err = errors.New("expected JSON object but got %s", value)
+			err = fmt.Errorf("expected JSON object but got %s", value)
 			return
 		}
 		// Write TypeURL

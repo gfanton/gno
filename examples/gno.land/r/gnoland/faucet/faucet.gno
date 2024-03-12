@@ -85,7 +85,7 @@ func assertIsController() error {
 
 	ok := gControllers.Has(caller.String())
 	if !ok {
-		return errors.New(caller.String() + " is not on the controller list")
+		return errors.New("%q is not on the controller list", caller.String())
 	}
 	return nil
 }

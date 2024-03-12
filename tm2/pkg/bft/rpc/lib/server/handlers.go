@@ -139,7 +139,7 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 				continue
 			}
 			if len(r.URL.Path) > 1 {
-				responses = append(responses, types.RPCInvalidRequestError(request.ID, errors.New("path %s is invalid", r.URL.Path)))
+				responses = append(responses, types.RPCInvalidRequestError(request.ID, fmt.Errorf("path %s is invalid", r.URL.Path)))
 				continue
 			}
 			rpcFunc, ok := funcMap[request.Method]
@@ -207,7 +207,7 @@ func mapParamsToArgs(rpcFunc *RPCFunc, params map[string]json.RawMessage, argsOf
 
 func arrayParamsToArgs(rpcFunc *RPCFunc, params []json.RawMessage, argsOffset int) ([]reflect.Value, error) {
 	if len(rpcFunc.argNames) != len(params) {
-		return nil, errors.New("expected %v parameters (%v), got %v (%v)",
+		return nil, fmt.Errorf("expected %v parameters (%v), got %v (%v)",
 			len(rpcFunc.argNames), rpcFunc.argNames, len(params), params)
 	}
 
@@ -250,7 +250,7 @@ func jsonParamsToArgs(rpcFunc *RPCFunc, raw []byte) ([]reflect.Value, error) {
 	}
 
 	// Otherwise, bad format, we cannot parse
-	return nil, errors.New("unknown type for JSON params: %v. Expected map or array", err)
+	return nil, fmt.Errorf("unknown type for JSON params: %v. Expected map or array", err)
 }
 
 // rpc.json
@@ -814,7 +814,7 @@ func (wm *WebsocketManager) WebsocketHandler(w http.ResponseWriter, r *http.Requ
 func unreflectResult(returns []reflect.Value) (interface{}, error) {
 	errV := returns[1]
 	if errV.Interface() != nil {
-		return nil, errors.New("%v", errV.Interface())
+		return nil, fmt.Errorf("%v", errV.Interface())
 	}
 	rv := returns[0]
 	// If the result is a registered interface, we need a pointer to it so

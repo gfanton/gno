@@ -428,9 +428,9 @@ func sendAmountTo(
 		return fmt.Errorf("broadcasting bytes: %w", err)
 	}
 	if bres.CheckTx.IsErr() {
-		return errors.New("transaction failed %#v\nlog %s", bres, bres.CheckTx.Log)
+		return fmt.Errorf("transaction failed %#v\nlog %s", bres, bres.CheckTx.Log)
 	} else if bres.DeliverTx.IsErr() {
-		return errors.New("transaction failed %#v\nlog %s", bres, bres.DeliverTx.Log)
+		return fmt.Errorf("transaction failed %#v\nlog %s", bres, bres.DeliverTx.Log)
 	} else {
 		io.Println(string(bres.DeliverTx.Data))
 		io.Println("OK!")

@@ -30,7 +30,7 @@ func (part *Part) ValidateBasic() error {
 		return errors.New("negative Index")
 	}
 	if len(part.Bytes) > BlockPartSizeBytes {
-		return errors.New("too big: %d bytes, max: %d", len(part.Bytes), BlockPartSizeBytes)
+		return fmt.Errorf("too big: %d bytes, max: %d", len(part.Bytes), BlockPartSizeBytes)
 	}
 	if err := part.Proof.ValidateBasic(); err != nil {
 		return fmt.Errorf("wrong Proof: %w", err)

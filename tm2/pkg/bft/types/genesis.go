@@ -126,7 +126,7 @@ func (genDoc *GenesisDoc) ValidateAndComplete() error {
 		return errors.New("Genesis doc must include non-empty chain_id")
 	}
 	if len(genDoc.ChainID) > MaxChainIDLen {
-		return errors.New("chain_id in genesis doc is too long (max: %d)", MaxChainIDLen)
+		return fmt.Errorf("chain_id in genesis doc is too long (max: %d)", MaxChainIDLen)
 	}
 
 	// Start from defaults and fill in consensus params from GenesisDoc.
@@ -137,12 +137,12 @@ func (genDoc *GenesisDoc) ValidateAndComplete() error {
 
 	for i, v := range genDoc.Validators {
 		if v.Power == 0 {
-			return errors.New("The genesis file cannot contain validators with no voting power: %v", v)
+			return fmt.Errorf("The genesis file cannot contain validators with no voting power: %v", v)
 		}
 		if v.Address.IsZero() {
 			genDoc.Validators[i].Address = v.PubKey.Address()
 		} else if v.PubKey.Address() != v.Address {
-			return errors.New("Incorrect address for validator %v in the genesis file, should be %v", v, v.PubKey.Address())
+			return fmt.Errorf("Incorrect address for validator %v in the genesis file, should be %v", v, v.PubKey.Address())
 		}
 	}
 

@@ -506,7 +506,7 @@ func runTestFiles(
 
 		ret := eval[0].GetString()
 		if ret == "" {
-			err := errors.New("failed to execute unit test: %q", test.Name)
+			err := fmt.Errorf("failed to execute unit test: %q", test.Name)
 			errs = multierr.Append(errs, err)
 			io.ErrPrintfln("--- FAIL: %s [internal gno testing error]", test.Name)
 			continue
@@ -522,7 +522,7 @@ func runTestFiles(
 		}
 
 		if rep.Failed {
-			err := errors.New("failed: %q", test.Name)
+			err := fmt.Errorf("failed: %q", test.Name)
 			errs = multierr.Append(errs, err)
 		}
 

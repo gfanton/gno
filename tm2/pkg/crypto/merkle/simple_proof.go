@@ -79,11 +79,11 @@ func (sp *SimpleProof) Verify(rootHash []byte, leaf []byte) error {
 		return errors.New("Proof index cannot be negative")
 	}
 	if !bytes.Equal(sp.LeafHash, leafHash) {
-		return errors.New("invalid leaf hash: wanted %X got %X", leafHash, sp.LeafHash)
+		return fmt.Errorf("invalid leaf hash: wanted %X got %X", leafHash, sp.LeafHash)
 	}
 	computedHash := sp.ComputeRootHash()
 	if !bytes.Equal(computedHash, rootHash) {
-		return errors.New("invalid root hash: wanted %X got %X", rootHash, computedHash)
+		return fmt.Errorf("invalid root hash: wanted %X got %X", rootHash, computedHash)
 	}
 	return nil
 }
@@ -124,14 +124,14 @@ func (sp *SimpleProof) ValidateBasic() error {
 		return errors.New("negative Index")
 	}
 	if len(sp.LeafHash) != tmhash.Size {
-		return errors.New("expected LeafHash size to be %d, got %d", tmhash.Size, len(sp.LeafHash))
+		return fmt.Errorf("expected LeafHash size to be %d, got %d", tmhash.Size, len(sp.LeafHash))
 	}
 	if len(sp.Aunts) > maxAunts {
-		return errors.New("expected no more than %d aunts, got %d", maxAunts, len(sp.Aunts))
+		return fmt.Errorf("expected no more than %d aunts, got %d", maxAunts, len(sp.Aunts))
 	}
 	for i, auntHash := range sp.Aunts {
 		if len(auntHash) != tmhash.Size {
-			return errors.New("expected Aunts#%d size to be %d, got %d", i, tmhash.Size, len(auntHash))
+			return fmt.Errorf("expected Aunts#%d size to be %d, got %d", i, tmhash.Size, len(auntHash))
 		}
 	}
 	return nil

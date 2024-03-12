@@ -602,11 +602,11 @@ func (cdc *Codec) decodeReflectBinaryArray(bz []byte, info *TypeInfo, rv reflect
 			}
 			// Validate field number and typ3.
 			if fnum != fopts.BinFieldNum {
-				err = errors.New(fmt.Sprintf("expected repeated field number %v, got %v", fopts.BinFieldNum, fnum))
+				err = fmt.Errorf(fmt.Sprintf("expected repeated field number %v, got %v", fopts.BinFieldNum, fnum))
 				return
 			}
 			if typ != Typ3ByteLength {
-				err = errors.New(fmt.Sprintf("expected repeated field type %v, got %v", Typ3ByteLength, typ))
+				err = fmt.Errorf(fmt.Sprintf("expected repeated field type %v, got %v", Typ3ByteLength, typ))
 				return
 			}
 			// Decode the next ByteLength bytes into erv.
@@ -811,11 +811,11 @@ func (cdc *Codec) decodeReflectBinarySlice(bz []byte, info *TypeInfo, rv reflect
 			}
 			// Validate field number and typ3.
 			if fnum < fopts.BinFieldNum {
-				err = errors.New(fmt.Sprintf("expected repeated field number %v or greater, got %v", fopts.BinFieldNum, fnum))
+				err = fmt.Errorf(fmt.Sprintf("expected repeated field number %v or greater, got %v", fopts.BinFieldNum, fnum))
 				return
 			}
 			if typ != Typ3ByteLength {
-				err = errors.New(fmt.Sprintf("expected repeated field type %v, got %v", Typ3ByteLength, typ))
+				err = fmt.Errorf(fmt.Sprintf("expected repeated field type %v, got %v", Typ3ByteLength, typ))
 				return
 			}
 			// Decode the next ByteLength bytes into erv.

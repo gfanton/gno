@@ -16,7 +16,7 @@ type GasPrice struct {
 func ParseGasPrice(gasprice string) (GasPrice, error) {
 	parts := strings.Split(gasprice, "/")
 	if len(parts) != 2 {
-		return GasPrice{}, errors.New("invalid gas price: %s", gasprice)
+		return GasPrice{}, fmt.Errorf("invalid gas price: %s", gasprice)
 	}
 	price, err := ParseCoin(parts[0])
 	if err != nil {
@@ -27,7 +27,7 @@ func ParseGasPrice(gasprice string) (GasPrice, error) {
 		return GasPrice{}, fmt.Errorf("invalid gas price: %s (invalid gas denom): %w", gasprice, err)
 	}
 	if gas.Denom != "gas" {
-		return GasPrice{}, errors.New("invalid gas price: %s (invalid gas denom)", gasprice)
+		return GasPrice{}, fmt.Errorf("invalid gas price: %s (invalid gas denom)", gasprice)
 	}
 	return GasPrice{
 		Gas:   gas.Amount,
@@ -38,7 +38,7 @@ func ParseGasPrice(gasprice string) (GasPrice, error) {
 func ParseGasPrices(gasprices string) (res []GasPrice, err error) {
 	parts := strings.Split(gasprices, ";")
 	if len(parts) == 0 {
-		return nil, errors.New("invalid gas prices: %s", gasprices)
+		return nil, fmt.Errorf("invalid gas prices: %s", gasprices)
 	}
 	res = make([]GasPrice, len(parts))
 	for i, part := range parts {

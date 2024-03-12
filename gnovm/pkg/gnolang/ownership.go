@@ -52,7 +52,7 @@ func (oid ObjectID) MarshalAmino() (string, error) {
 func (oid *ObjectID) UnmarshalAmino(oids string) error {
 	parts := strings.Split(oids, ":")
 	if len(parts) != 2 {
-		return errors.New("invalid ObjectID %s", oids)
+		return fmt.Errorf("invalid ObjectID %s", oids)
 	}
 	_, err := hex.Decode(oid.PkgID.Hashlet[:], []byte(parts[0]))
 	if err != nil {

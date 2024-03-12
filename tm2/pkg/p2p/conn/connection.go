@@ -320,7 +320,7 @@ func (c *MConnection) flush() {
 func (c *MConnection) _recover() {
 	if r := recover(); r != nil {
 		c.Logger.Error("MConnection panicked", "err", r, "stack", string(debug.Stack()))
-		c.stopForError(errors.New("recovered from panic: %v", r))
+		c.stopForError(fmt.Errorf("recovered from panic: %v", r))
 	}
 }
 

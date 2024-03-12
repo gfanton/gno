@@ -198,7 +198,7 @@ func (c *JSONRPCClient) Call(method string, params map[string]interface{}, resul
 	defer httpResponse.Body.Close() //nolint: errcheck
 
 	if !statusOK(httpResponse.StatusCode) {
-		return nil, errors.New("server at '%s' returned %s", c.address, httpResponse.Status)
+		return nil, fmt.Errorf("server at '%s' returned %s", c.address, httpResponse.Status)
 	}
 
 	responseBytes, err := io.ReadAll(httpResponse.Body)
@@ -235,7 +235,7 @@ func (c *JSONRPCClient) sendBatch(requests []*jsonRPCBufferedRequest) ([]interfa
 	defer httpResponse.Body.Close() //nolint: errcheck
 
 	if !statusOK(httpResponse.StatusCode) {
-		return nil, errors.New("server at '%s' returned %s", c.address, httpResponse.Status)
+		return nil, fmt.Errorf("server at '%s' returned %s", c.address, httpResponse.Status)
 	}
 
 	responseBytes, err := io.ReadAll(httpResponse.Body)
@@ -329,7 +329,7 @@ func (c *URIClient) Call(method string, params map[string]interface{}, result in
 	defer resp.Body.Close() //nolint: errcheck
 
 	if !statusOK(resp.StatusCode) {
-		return nil, errors.New("server at '%s' returned %s", c.address, resp.Status)
+		return nil, fmt.Errorf("server at '%s' returned %s", c.address, resp.Status)
 	}
 
 	responseBytes, err := io.ReadAll(resp.Body)
@@ -380,7 +380,7 @@ func unmarshalResponseBytesArray(responseBytes []byte, expectedID types.JSONRPCS
 	// and unsuccessful responses.
 
 	if len(results) != len(responses) {
-		return nil, errors.New("expected %d result objects into which to inject responses, but got %d", len(responses), len(results))
+		return nil, fmt.Errorf("expected %d result objects into which to inject responses, but got %d", len(responses), len(results))
 	}
 
 	for i, response := range responses {
@@ -407,10 +407,10 @@ func validateResponseID(res *types.RPCResponse, expectedID types.JSONRPCStringID
 	}
 	id, ok := res.ID.(types.JSONRPCStringID)
 	if !ok {
-		return errors.New("expected ID string in response but got: %v", id)
+		return fmt.Errorf("expected ID string in response but got: %v", id)
 	}
 	if expectedID != id {
-		return errors.New("response ID (%s) does not match request ID (%s)", id, expectedID)
+		return fmt.Errorf("response ID (%s) does not match request ID (%s)", id, expectedID)
 	}
 	return nil
 }

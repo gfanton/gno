@@ -104,12 +104,12 @@ func (ms *multiStore) LoadVersion(ver int64) error {
 		for key, storeParams := range ms.storesParams {
 			store, err := ms.constructStore(storeParams)
 			if err != nil {
-				return errors.New("failed to load Store: %v", err)
+				return fmt.Errorf("failed to load Store: %v", err)
 			}
 			store.SetStoreOptions(ms.storeOpts)
 			err = store.LoadVersion(ver)
 			if err != nil {
-				return errors.New("failed to load Store version %d: %v", ver, err)
+				return fmt.Errorf("failed to load Store version %d: %v", ver, err)
 			}
 			if !store.LastCommitID().IsZero() {
 				return errors.New("failed to load Store: non-empty CommitID for zero state")
@@ -146,7 +146,7 @@ func (ms *multiStore) LoadVersion(ver int64) error {
 		store.SetStoreOptions(ms.storeOpts)
 		err = store.LoadVersion(ver)
 		if err != nil {
-			return errors.New("failed to load Store version %d: %v", ver, err)
+			return fmt.Errorf("failed to load Store version %d: %v", ver, err)
 		}
 		if !store.LastCommitID().Equals(id) {
 			return errors.New("failed to load Store: wrong commit id: %v vs %v",

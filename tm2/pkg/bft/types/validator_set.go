@@ -722,13 +722,13 @@ func (vals *ValidatorSet) VerifyFutureCommit(newSet *ValidatorSet, chainID strin
 			continue
 		}
 		if precommit.Height != height {
-			return errors.New("Blocks don't match - %d vs %d", round, precommit.Round)
+			return fmt.Errorf("Blocks don't match - %d vs %d", round, precommit.Round)
 		}
 		if precommit.Round != round {
-			return errors.New("Invalid commit -- wrong round: %v vs %v", round, precommit.Round)
+			return fmt.Errorf("Invalid commit -- wrong round: %v vs %v", round, precommit.Round)
 		}
 		if precommit.Type != PrecommitType {
-			return errors.New("Invalid commit -- not precommit @ index %v", idx)
+			return fmt.Errorf("Invalid commit -- not precommit @ index %v", idx)
 		}
 		// See if this validator is in oldVals.
 		oldIdx, val := oldVals.GetByAddress(precommit.ValidatorAddress)
@@ -740,7 +740,7 @@ func (vals *ValidatorSet) VerifyFutureCommit(newSet *ValidatorSet, chainID strin
 		// Validate signature.
 		precommitSignBytes := commit.VoteSignBytes(chainID, idx)
 		if !val.PubKey.VerifyBytes(precommitSignBytes, precommit.Signature) {
-			return errors.New("Invalid commit -- invalid signature: %v", precommit)
+			return fmt.Errorf("Invalid commit -- invalid signature: %v", precommit)
 		}
 		// Good precommit!
 		if blockID.Equals(precommit.BlockID) {

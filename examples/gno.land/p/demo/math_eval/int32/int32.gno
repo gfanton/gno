@@ -93,7 +93,7 @@ func Eval(expr expression, variables map[string]int) (res int, err error) {
 			res, ok = variables[ast.Str]
 		}
 		if !ok {
-			err = errors.New(ufmt.Sprintf("variable '%s' not found", ast.Str))
+			err = fmt.Errorf("variable %q not found", ast.Str)
 		}
 		return
 	case expressionOperation:

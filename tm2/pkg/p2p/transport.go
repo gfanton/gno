@@ -289,7 +289,7 @@ func (mt *MultiplexTransport) acceptPeers() {
 				if r := recover(); r != nil {
 					err := RejectedError{
 						conn:          c,
-						err:           errors.New("recovered from panic: %v", r),
+						err:           fmt.Errorf("recovered from panic: %v", r),
 						isAuthFailure: true,
 					}
 					select {

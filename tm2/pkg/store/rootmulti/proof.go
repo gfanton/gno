@@ -64,7 +64,7 @@ func NewMultiStoreProofOp(key []byte, proof *MultiStoreProof) MultiStoreProofOp 
 // given proof operation.
 func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	if pop.Type != ProofOpMultiStore {
-		return nil, errors.New("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpMultiStore)
+		return nil, fmt.Errorf("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpMultiStore)
 	}
 
 	// XXX: a bit strange as we'll discard this, but it works
@@ -116,11 +116,11 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 				return [][]byte{root}, nil
 			}
 
-			return nil, errors.New("hash mismatch for substore %v: %X vs %X", si.Name, si.Core.CommitID.Hash, value)
+			return nil, fmt.Errorf("hash mismatch for substore %v: %X vs %X", si.Name, si.Core.CommitID.Hash, value)
 		}
 	}
 
-	return nil, errors.New("key %v not found in multistore proof", op.key)
+	return nil, fmt.Errorf("key %v not found in multistore proof", op.key)
 }
 
 //----------------------------------------
