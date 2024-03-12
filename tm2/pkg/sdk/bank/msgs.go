@@ -1,8 +1,6 @@
 package bank
 
 import (
-	"fmt"
-
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/std"
@@ -168,14 +166,14 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 
 	for _, in := range inputs {
 		if err := in.ValidateBasic(); err != nil {
-			return fmt.Errorf(": %w", err)
+			return err
 		}
 		totalIn = totalIn.Add(in.Coins)
 	}
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
-			return fmt.Errorf(": %w", err)
+			return err
 		}
 		totalOut = totalOut.Add(out.Coins)
 	}

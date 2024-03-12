@@ -252,7 +252,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 		res.Key = key
 		if !st.VersionExists(res.Height) {
-			res.Log = fmt.Errorf(": %w", iavl.ErrVersionDoesNotExist).Error()
+			res.Log = iavl.ErrVersionDoesNotExist.Error()
 			break
 		}
 

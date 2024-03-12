@@ -474,7 +474,7 @@ func (tree *MutableTree) GetVersionedWithProof(key []byte, version int64) ([]byt
 
 		return t.GetWithProof(key)
 	}
-	return nil, nil, fmt.Errorf(": %w", ErrVersionDoesNotExist)
+	return nil, nil, ErrVersionDoesNotExist
 }
 
 // GetVersionedRangeWithProof gets key/value pairs within the specified range
@@ -489,5 +489,5 @@ func (tree *MutableTree) GetVersionedRangeWithProof(startKey, endKey []byte, lim
 		}
 		return t.GetRangeWithProof(startKey, endKey, limit)
 	}
-	return nil, nil, nil, fmt.Errorf(": %w", ErrVersionDoesNotExist)
+	return nil, nil, nil, ErrVersionDoesNotExist
 }
