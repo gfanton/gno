@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"bufio"
+	"errors"
 	goerrors "errors"
 	"fmt"
 	"io"
@@ -19,7 +20,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/store"
 	walm "github.com/gnolang/gno/tm2/pkg/bft/wal"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/events"
 	"github.com/gnolang/gno/tm2/pkg/log"
 	osm "github.com/gnolang/gno/tm2/pkg/os"

@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -13,7 +14,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 	tmtime "github.com/gnolang/gno/tm2/pkg/bft/types/time"
 	"github.com/gnolang/gno/tm2/pkg/bitarray"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/events"
 	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/gnolang/gno/tm2/pkg/p2p"

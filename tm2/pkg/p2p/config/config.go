@@ -1,9 +1,8 @@
 package config
 
 import (
+	"errors"
 	"time"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // -----------------------------------------------------------------------------

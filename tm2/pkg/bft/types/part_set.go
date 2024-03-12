@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -9,7 +10,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/bitarray"
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/maths"
 )
 

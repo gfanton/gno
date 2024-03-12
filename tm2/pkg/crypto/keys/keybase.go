@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/crypto/secp256k1"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
 	"github.com/gnolang/gno/tm2/pkg/db/memdb"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 var _ Keybase = dbKeybase{}

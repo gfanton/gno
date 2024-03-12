@@ -3,6 +3,7 @@ package rpcclient
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	types "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/random"
 )
 

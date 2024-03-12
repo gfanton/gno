@@ -2,12 +2,11 @@ package rpctypes
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 type SampleResult struct {

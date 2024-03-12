@@ -1,12 +1,12 @@
 package privval
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 
 	"github.com/gnolang/gno/tm2/pkg/crypto/ed25519"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	osm "github.com/gnolang/gno/tm2/pkg/os"
 )
 

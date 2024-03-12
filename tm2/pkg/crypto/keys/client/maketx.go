@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 
@@ -8,7 +9,6 @@ import (
 	types "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
 	"github.com/gnolang/gno/tm2/pkg/commands"
 	"github.com/gnolang/gno/tm2/pkg/crypto/keys"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/std"
 )
 

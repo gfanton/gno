@@ -1,10 +1,9 @@
 package amino
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 const bdOptionByte = 0x01

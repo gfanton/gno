@@ -2,11 +2,11 @@ package rootmulti
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/iavl"
 )
 

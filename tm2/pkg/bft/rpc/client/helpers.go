@@ -1,9 +1,8 @@
 package client
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // Waiter is informed of current height, decided whether to quit early

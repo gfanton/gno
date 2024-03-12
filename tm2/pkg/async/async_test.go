@@ -1,14 +1,13 @@
 package async
 
 import (
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 func TestParallel(t *testing.T) {

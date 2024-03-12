@@ -1,11 +1,11 @@
 package privval
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // SignerClient implements PrivValidator.

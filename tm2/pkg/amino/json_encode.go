@@ -3,11 +3,10 @@ package amino
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // ----------------------------------------

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -9,7 +10,6 @@ import (
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	tmtime "github.com/gnolang/gno/tm2/pkg/bft/types/time"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	osm "github.com/gnolang/gno/tm2/pkg/os"
 )
 

@@ -16,7 +16,6 @@ import (
 	cfg "github.com/gnolang/gno/tm2/pkg/bft/mempool/config"
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 	"github.com/gnolang/gno/tm2/pkg/clist"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/gnolang/gno/tm2/pkg/maths"
 	osm "github.com/gnolang/gno/tm2/pkg/os"

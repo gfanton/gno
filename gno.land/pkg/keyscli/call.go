@@ -2,6 +2,7 @@ package keyscli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/commands"
 	"github.com/gnolang/gno/tm2/pkg/crypto/keys"
 	"github.com/gnolang/gno/tm2/pkg/crypto/keys/client"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/std"
 )
 

@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
@@ -10,7 +12,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/rpc/client"
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
 	"github.com/gnolang/gno/tm2/pkg/commands"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/std"
 )
 

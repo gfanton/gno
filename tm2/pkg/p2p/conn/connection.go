@@ -2,6 +2,7 @@ package conn
 
 import (
 	"bufio"
+	"errors"
 	goerrors "errors"
 	"fmt"
 	"io"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/flow"
 	"github.com/gnolang/gno/tm2/pkg/maths"
 	"github.com/gnolang/gno/tm2/pkg/service"

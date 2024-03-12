@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 type MemFile struct {

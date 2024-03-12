@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"errors"
 	goerrors "errors"
 	"fmt"
 	"sync"
@@ -9,7 +10,6 @@ import (
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/iavl"
 	"github.com/gnolang/gno/tm2/pkg/std"
 

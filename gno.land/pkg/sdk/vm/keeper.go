@@ -4,6 +4,7 @@ package vm
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -11,7 +12,6 @@ import (
 
 	gno "github.com/gnolang/gno/gnovm/pkg/gnolang"
 	"github.com/gnolang/gno/gnovm/stdlibs"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/sdk"
 	"github.com/gnolang/gno/tm2/pkg/sdk/auth"
 	"github.com/gnolang/gno/tm2/pkg/sdk/bank"

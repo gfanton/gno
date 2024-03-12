@@ -2,10 +2,10 @@ package iavl
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // ErrVersionDoesNotExist is returned if a requested version does not exist.

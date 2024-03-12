@@ -1,10 +1,10 @@
 package merkle
 
 import (
+	"errors"
 	"testing"
 
 	amino "github.com/gnolang/gno/tm2/pkg/amino"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

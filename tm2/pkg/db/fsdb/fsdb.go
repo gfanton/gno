@@ -11,7 +11,6 @@ import (
 
 	"github.com/gnolang/gno/tm2/pkg/db"
 	"github.com/gnolang/gno/tm2/pkg/db/internal"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 const (

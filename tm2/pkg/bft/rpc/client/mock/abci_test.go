@@ -1,6 +1,7 @@
 package mock_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/rpc/client/mock"
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 func TestABCIMock(t *testing.T) {

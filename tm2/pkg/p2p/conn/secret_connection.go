@@ -7,6 +7,8 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"math"
 	"net"
@@ -23,7 +25,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/async"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/crypto/ed25519"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // 4 + 1024 == 1028 total frame size

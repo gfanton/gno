@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 /*

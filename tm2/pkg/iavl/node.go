@@ -10,7 +10,6 @@ import (
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/crypto/tmhash"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // Node represents a node in a Tree.

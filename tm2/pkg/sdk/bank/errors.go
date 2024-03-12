@@ -1,7 +1,7 @@
 package bank
 
 import (
-	"github.com/gnolang/gno/tm2/pkg/errors"
+	"errors"
 )
 
 // for convenience:

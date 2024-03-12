@@ -1,11 +1,11 @@
 package armor
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/crypto/armor"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 var emptyArmorHeader = map[string]string{}

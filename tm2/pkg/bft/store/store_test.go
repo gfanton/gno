@@ -19,7 +19,6 @@ import (
 	tmtime "github.com/gnolang/gno/tm2/pkg/bft/types/time"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
 	"github.com/gnolang/gno/tm2/pkg/db/memdb"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/log"
 )
 

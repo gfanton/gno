@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
 	"github.com/gnolang/gno/tm2/pkg/crypto/tmhash"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 
 	"github.com/gnolang/gno/tm2/pkg/store/cachemulti"
 	serrors "github.com/gnolang/gno/tm2/pkg/store/errors"

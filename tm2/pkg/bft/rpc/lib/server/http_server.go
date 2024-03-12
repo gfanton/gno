@@ -4,6 +4,7 @@ package rpcserver
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -15,7 +16,6 @@ import (
 	"golang.org/x/net/netutil"
 
 	types "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 // Config is a RPC server configuration.

@@ -1,6 +1,7 @@
 package mempool
 
 import (
+	"errors"
 	"net"
 	"sync"
 	"testing"
@@ -13,7 +14,6 @@ import (
 	memcfg "github.com/gnolang/gno/tm2/pkg/bft/mempool/config"
 	"github.com/gnolang/gno/tm2/pkg/bft/proxy"
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/gnolang/gno/tm2/pkg/p2p"
 	p2pcfg "github.com/gnolang/gno/tm2/pkg/p2p/config"

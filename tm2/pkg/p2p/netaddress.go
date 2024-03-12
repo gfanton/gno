@@ -5,6 +5,7 @@
 package p2p
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 type ID = crypto.ID

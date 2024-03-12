@@ -1,10 +1,10 @@
 package iavl
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gnolang/gno/tm2/pkg/crypto/merkle"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 const ProofOpIAVLValue = "iavl:v"

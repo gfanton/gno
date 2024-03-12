@@ -2,8 +2,8 @@ package merkle
 
 import (
 	"bytes"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
+	"errors"
+	"fmt"
 )
 
 //----------------------------------------

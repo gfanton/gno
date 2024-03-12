@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -13,7 +14,6 @@ import (
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	bft "github.com/gnolang/gno/tm2/pkg/bft/types"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/std"
 	"github.com/gnolang/gno/tm2/pkg/store"
 )

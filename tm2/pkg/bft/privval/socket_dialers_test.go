@@ -1,6 +1,7 @@
 package privval
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"testing"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gnolang/gno/tm2/pkg/crypto/ed25519"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 func getDialerTestCases(t *testing.T) []dialerTestCase {

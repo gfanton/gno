@@ -2,11 +2,10 @@ package rpcserver
 
 import (
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 func GetParam(r *http.Request, param string) string {

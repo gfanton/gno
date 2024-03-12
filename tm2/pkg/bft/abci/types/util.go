@@ -2,9 +2,8 @@ package abci
 
 import (
 	"bytes"
+	"errors"
 	"sort"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 //------------------------------------------------------------------------------

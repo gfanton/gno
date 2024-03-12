@@ -14,7 +14,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/crypto/hd"
 	"github.com/gnolang/gno/tm2/pkg/crypto/secp256k1"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 type (

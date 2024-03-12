@@ -40,7 +40,6 @@ import (
 	"strconv"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 func MustReadFile(path string) *FileNode {

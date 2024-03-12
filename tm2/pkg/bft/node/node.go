@@ -4,6 +4,7 @@ package node
 // is enabled by the user by setting a profiling address
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -36,7 +37,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/version"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	dbm "github.com/gnolang/gno/tm2/pkg/db"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/events"
 	"github.com/gnolang/gno/tm2/pkg/p2p"
 	"github.com/gnolang/gno/tm2/pkg/service"

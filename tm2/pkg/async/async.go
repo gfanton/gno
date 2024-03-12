@@ -1,9 +1,8 @@
 package async
 
 import (
+	"fmt"
 	"sync/atomic"
-
-	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
 //----------------------------------------

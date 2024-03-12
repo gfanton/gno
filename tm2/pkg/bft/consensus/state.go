@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"bytes"
+	"errors"
 	goerrors "errors"
 	"fmt"
 	"log/slog"
@@ -19,7 +20,6 @@ import (
 	tmtime "github.com/gnolang/gno/tm2/pkg/bft/types/time"
 	walm "github.com/gnolang/gno/tm2/pkg/bft/wal"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/events"
 	osm "github.com/gnolang/gno/tm2/pkg/os"
 	"github.com/gnolang/gno/tm2/pkg/p2p"

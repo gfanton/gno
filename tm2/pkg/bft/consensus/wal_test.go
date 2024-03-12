@@ -23,7 +23,6 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 	walm "github.com/gnolang/gno/tm2/pkg/bft/wal"
 	"github.com/gnolang/gno/tm2/pkg/db/memdb"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/events"
 	"github.com/gnolang/gno/tm2/pkg/log"
 )
