@@ -145,7 +145,7 @@ func (proof *RangeProof) VerifyAbsence(key []byte) error {
 		if cmp < 0 {
 			return nil // proof ok
 		} else if cmp == 0 {
-			return fmt.Errorf(fmt.Sprintf("absence disproved via item #%v", i))
+			return fmt.Errorf("absence disproved via item #%v", i)
 		} else {
 			// if i == len(proof.Leaves)-1 {
 			// If last item, check whether

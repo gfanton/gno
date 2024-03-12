@@ -78,7 +78,7 @@ func ParseExpr(expr string) (retx Expr, err error) {
 			if rerr, ok := r.(error); ok {
 				err = rerr
 			} else {
-				err = fmt.Errorf(fmt.Sprintf("%v", r))
+				err = fmt.Errorf("%v", r)
 			}
 			return
 		}
@@ -115,7 +115,7 @@ func ParseFile(filename string, body string) (fn *FileNode, err error) {
 			if rerr, ok := r.(error); ok {
 				fmt.Errorf("parsing file: %w", rerr)
 			} else {
-				err = fmt.Errorf(fmt.Sprintf("%v", r)).Stacktrace()
+				err = fmt.Errorf("%v", r).Stacktrace()
 			}
 			return
 		}
