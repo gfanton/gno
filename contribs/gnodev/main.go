@@ -174,13 +174,18 @@ func execDev(cfg *devCfg, args []string, io commands.IO) error {
 		cancel(nil)
 	})
 
-	logger := clogger.NewLogger(rt, slog.LevelInfo)
+	loglevel := slog.LevelInfo
+	if cfg.verbose {
+		loglevel = slog.LevelDebug
+	}
+
+	logger := clogger.NewLogger(rt, loglevel, true)
 	loggerEvents := logger.WithGroup(EventServerLogName)
 	emitterServer := emitter.NewServer(loggerEvents)
 
 	// Setup Dev Node
 	// XXX: find a good way to export or display node logs
-	devNode, err := setupDevNode(ctx, clogger.NewLogger(rt, slog.LevelError), cfg, emitterServer, pkgpaths)
+	devNode, err := setupDevNode(ctx, logger, cfg, emitterServer, pkgpaths)
 	if err != nil {
 		return err
 	}
@@ -223,7 +228,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) error {
 
 	logger.WithGroup(WebLogName).
 		Info("gnoweb started",
-			"lisn", fmt.Sprintf("http://%s\n", server.Addr))
+			"lisn", fmt.Sprintf("http://%s", server.Addr))
 
 	watcher, err := watcher.NewPackageWatcher(loggerEvents, emitterServer)
 	if err != nil {
@@ -237,12 +242,12 @@ func execDev(cfg *devCfg, args []string, io commands.IO) error {
 	logger.WithGroup("[READY]").Info("for commands and help, press `h`")
 
 	// Run the main event loop
-	return runEventLoop(ctx, logger, cfg, rt, devNode, watcher)
+	return runEventLoop(ctx, logger, rt, devNode, watcher)
 }
 
 // XXX: Automatize this the same way command does
 func printHelper(logger *slog.Logger) {
-	logger.WithGroup("Helper").Info(`
+	logger.Info(`
 Gno Dev Helper:
   H           Help - display this message
   R           Reload - Reload all packages to take change into account.
@@ -254,7 +259,6 @@ Gno Dev Helper:
 func runEventLoop(
 	ctx context.Context,
 	logger *slog.Logger,
-	cfg *devCfg,
 	rt *rawterm.RawTerm,
 	dnode *dev.Node,
 	watch *watcher.PackageWatcher,
@@ -289,7 +293,7 @@ func runEventLoop(
 			}
 
 			logger.WithGroup(KeyPressLogName).Debug(
-				fmt.Sprintf("<%s>\n", key.String()),
+				fmt.Sprintf("<%s>", key.String()),
 			)
 
 			switch key.Upper() {
@@ -388,7 +392,6 @@ func setupDevNode(
 	pkgspath []string,
 ) (*gnodev.Node, error) {
 	nodeLogger := logger.WithGroup(NodeLogName)
-	nodeLogger.Enabled(ctx, slog.LevelError)
 
 	gnoroot := gnoenv.RootDir()
 
@@ -451,15 +454,6 @@ func listenForKeyPress(logger *slog.Logger, rt *rawterm.RawTerm) <-chan rawterm.
 	}()
 
 	return cc
-}
-
-func checkForError(w io.Writer, err error) {
-	if err != nil {
-		fmt.Fprintf(w, "[ERROR] - %s\n", err.Error())
-		return
-	}
-
-	fmt.Fprintln(w, "[DONE]")
 }
 
 func resolveUnixOrTCPAddr(in string) (out string) {

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"strings"
+	"unicode"
 
 	"github.com/gnolang/gno/contribs/gnodev/pkg/emitter"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/events"
@@ -80,6 +82,8 @@ func NewDevNode(ctx context.Context, logger *slog.Logger, emitter emitter.Emitte
 		return nil, fmt.Errorf("unable to load genesis packages: %w", err)
 	}
 
+	logger.Info("pkgs loaded", "path", cfg.PackagesPathList)
+
 	// generate genesis state
 	genesis := gnoland.GnoGenesisState{
 		Balances: DefaultBalance,
@@ -125,6 +129,7 @@ func (d *Node) GetRemoteAddress() string {
 // UpdatePackages updates the currently known packages. It will be taken into
 // consideration in the next reload of the node.
 func (d *Node) UpdatePackages(paths ...string) error {
+	var n int
 	for _, path := range paths {
 		// List all packages from target path
 		pkgslist, err := gnomod.ListPkgs(path)
@@ -137,7 +142,11 @@ func (d *Node) UpdatePackages(paths ...string) error {
 			d.pkgs[pkg.Dir] = pkg
 			d.logger.Debug("pkgs update", "name", pkg.Name, "path", pkg.Dir)
 		}
+
+		n += len(pkgslist)
 	}
+
+	d.logger.Info(fmt.Sprintf("updated %d pacakges", n))
 	return nil
 }
 
@@ -232,20 +241,31 @@ func (d *Node) Reload(ctx context.Context) error {
 
 func (d *Node) genesisTxHandler(ctx sdk.Context, tx std.Tx, res sdk.Result) {
 	if res.IsErr() {
-		fmt.Printf("handler LOG: %+v\r\n", res.Log)
-		// var err error
-		// switch verr := res.Error.(type) {
-		// case *gno.PreprocessError:
-		// 	err = verr.Unwrap()
-		// case error:
-		// 	err = verr
-		// case string:
-		// 	err = errors.New(verr)
-		// default:
-		// 	err = res.Error
-		// }
-		// d.logger.Error("u", args...)
-		d.logger.Error("unable to send tx", "err", res.Error)
+		// XXX: for now, this is only way to catch the error
+		before, after, found := strings.Cut(res.Log, "\n")
+		if !found {
+			d.logger.Error("unable to send tx", "err", res.Error, "log", res.Log)
+			return
+		}
+
+		var attrs []slog.Attr
+
+		// Add error
+		attrs = append(attrs, slog.Any("err", res.Error))
+
+		// Fetch first line as error message
+		msg := strings.TrimFunc(before, func(r rune) bool {
+			return unicode.IsSpace(r) || r == ':'
+		})
+		attrs = append(attrs, slog.String("err", msg))
+
+		// If debug is enable, also append stack
+		if d.logger.Enabled(context.Background(), slog.LevelDebug) {
+			attrs = append(attrs, slog.String("stack", after))
+
+		}
+
+		d.logger.LogAttrs(context.Background(), slog.LevelError, "unable to deliver tx", attrs...)
 	}
 }
 
@@ -391,8 +411,9 @@ func buildNode(logger *slog.Logger, emitter emitter.Emitter, cfg *gnoland.InMemo
 		switch data := evt.(type) {
 		case bft.EventTx:
 			resEvt := events.TxResult{
-				Height:   data.Result.Height,
-				Index:    data.Result.Index,
+				Height: data.Result.Height,
+				Index:  data.Result.Index,
+				// XXX: Update this to split error for stack
 				Response: data.Result.Response,
 			}
 
