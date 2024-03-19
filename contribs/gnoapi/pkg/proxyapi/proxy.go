@@ -29,36 +29,34 @@ type Proxy struct {
 
 	logger *slog.Logger
 	debug  bool
-	json   bool
 }
 
-func NewProxy(client *gnoclient.Client, logger *slog.Logger, debug, json bool) *Proxy {
+func NewProxy(client *gnoclient.Client, logger *slog.Logger, debug bool) *Proxy {
 	return &Proxy{
 		accountOnce: &sync.Once{},
 		Client:      client,
 		logger:      logger,
 		debug:       debug,
-		json:        json,
 	}
 }
 
-func (p *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p.logger.Info("receiving request", "url", req.URL.String())
 	var err error
 	switch req.Method {
 	case "GET":
-		err = p.handleGet(res, req)
+		err = p.handleGet(w, req)
 	case "POST":
-		err = p.handlePost(res, req)
+		err = p.handlePost(w, req)
 	}
 
 	if err != nil {
 		p.logger.Error("request", "url", req.URL.String(), "error", err)
-		fmt.Fprintf(res, "error: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
+func (p *Proxy) handleGet(w http.ResponseWriter, req *http.Request) error {
 	realm := strings.TrimLeft(req.URL.Path, "/")
 	realm = filepath.Clean(realm)
 
@@ -69,7 +67,7 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 		// Check for command
 		splitCmd := strings.SplitN(basename, ":", 2)
 		if len(splitCmd) < 2 {
-			return p.render(res, realm)
+			return p.render(w, realm)
 		}
 
 		command := splitCmd[1]
@@ -79,7 +77,7 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 			req := gnoclient.QueryCfg{}
 			req.Path = "vm/qfuncs"
 			req.Data = []byte(realm)
-			return p.query(res, req)
+			return p.query(w, req)
 		default:
 			return fmt.Errorf("unknown command: %q", command)
 		}
@@ -150,7 +148,7 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 	cfg.GasFee = "1000000ugnot"
 	cfg.GasWanted = 2000000
 
-	return p.call(res, cfg, call)
+	return p.call(w, cfg, call)
 }
 
 func (p *Proxy) handlePost(res http.ResponseWriter, req *http.Request) error {
@@ -255,7 +253,7 @@ func (p *Proxy) handlePost(res http.ResponseWriter, req *http.Request) error {
 	return p.call(res, cfg, call)
 }
 
-func (p *Proxy) query(w io.Writer, req gnoclient.QueryCfg) error {
+func (p *Proxy) query(w http.ResponseWriter, req gnoclient.QueryCfg) error {
 	res, err := p.Query(req)
 	if err != nil {
 		return fmt.Errorf("query error: %w", err)
@@ -272,7 +270,7 @@ func (p *Proxy) query(w io.Writer, req gnoclient.QueryCfg) error {
 	return nil
 }
 
-func (p *Proxy) render(w io.Writer, realm string) error {
+func (p *Proxy) render(w http.ResponseWriter, realm string) error {
 	var req gnoclient.QueryCfg
 
 	req.Data = []byte(fmt.Sprintf("%s\n%s", realm, ""))
@@ -310,7 +308,7 @@ func (p *Proxy) queryFuncs(realm string) (funcsMap, error) {
 	return mfuncs, nil
 }
 
-func (p *Proxy) call(w io.Writer, cfg gnoclient.BaseTxCfg, call gnoclient.MsgCall) error {
+func (p *Proxy) call(w http.ResponseWriter, cfg gnoclient.BaseTxCfg, call gnoclient.MsgCall) error {
 	p.logger.Info("call",
 		"realm", call.PkgPath,
 		"method", call.FuncName,
@@ -340,12 +338,10 @@ func (p *Proxy) call(w io.Writer, cfg gnoclient.BaseTxCfg, call gnoclient.MsgCal
 		GasUsed: res.CheckTx.GasUsed,
 	}
 
-	ret, err := json.MarshalIndent(res2, "", "\t")
-	if err != nil {
+	if err := p.writeJSON(w, res2); err != nil {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, string(ret))
 	return nil
 }
 
@@ -380,23 +376,19 @@ func (p *Proxy) getSignerAccount() (std.BaseAccount, error) {
 	return p.account, err
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-	Log   string `json:"log,omitempty"`
-}
-
-func (p *Proxy) writeErrorJSON(w io.Writer, res abci.ResponseBase) error {
-	var errRes ErrorResponse
-	p.logger.Error("response error", "error", res.Error, "log", res.Log)
-	errRes.Error = res.Error.Error()
-	if p.debug {
-		errRes.Log = res.Log
+func (p *Proxy) writeErrorJSON(w http.ResponseWriter, res abci.ResponseBase) error {
+	p.logger.Error(fmt.Sprintf("%s\n%s", res.Error, res.Log))
+	mres, err := amino.MarshalJSONIndent(res, "", "\t")
+	if err != nil {
+		return res.Error
 	}
 
-	return p.writeJSON(w, &errRes)
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, string(mres), http.StatusInternalServerError)
+	return nil
 }
 
-func (p *Proxy) writeJSON(w io.Writer, data any) error {
+func (p *Proxy) writeJSON(w http.ResponseWriter, data any) error {
 	var err error
 	var raw []byte
 	if p.debug {
@@ -409,8 +401,9 @@ func (p *Proxy) writeJSON(w io.Writer, data any) error {
 		return fmt.Errorf("unable to marshal error response: %w", err)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(raw); err != nil {
-		return fmt.Errorf("write: %w", err)
+		return fmt.Errorf("write json error: %w", err)
 	}
 
 	return nil

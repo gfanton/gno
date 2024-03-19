@@ -129,7 +129,7 @@ func execApi(cfg *apiCfg, io commands.IO) error {
 	}
 	// funcs, err := makeFuncs(logger, cfg.realm)
 
-	proxycl := proxyapi.NewProxy(client, logger, true, true)
+	proxycl := proxyapi.NewProxy(client, logger, false)
 
 	var server http.Server
 	server.ReadHeaderTimeout = 60 * time.Second
