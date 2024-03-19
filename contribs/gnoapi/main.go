@@ -32,7 +32,7 @@ type apiCfg struct {
 var defaultApiOptions = &apiCfg{
 	listener: ":8282",
 	remote:   "127.0.0.1:36657",
-	chainID:  "tendermint_test",
+	chainID:  "dev",
 	address:  "",
 }
 
@@ -53,7 +53,7 @@ func main() {
 		},
 		cfg,
 		func(_ context.Context, args []string) error {
-			return execApi(cfg, args, stdio)
+			return execApi(cfg, stdio)
 		})
 
 	cmd.Execute(context.Background(), os.Args[1:])
@@ -98,7 +98,7 @@ func (c *apiCfg) RegisterFlags(fs *flag.FlagSet) {
 	)
 }
 
-func execApi(cfg *apiCfg, args []string, io commands.IO) error {
+func execApi(cfg *apiCfg, io commands.IO) error {
 	logger := log.ZapLoggerToSlog(log.NewZapConsoleLogger(io.Out(), zapcore.DebugLevel))
 
 	home := gnoenv.HomeDir()

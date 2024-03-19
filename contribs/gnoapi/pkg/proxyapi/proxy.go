@@ -1,12 +1,14 @@
 package proxyapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -14,7 +16,6 @@ import (
 	"github.com/gnolang/gno/gno.land/pkg/sdk/vm"
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
-	"github.com/gnolang/gno/tm2/pkg/errors"
 	"github.com/gnolang/gno/tm2/pkg/std"
 )
 
@@ -91,23 +92,52 @@ func (p *Proxy) handleGet(res http.ResponseWriter, req *http.Request) error {
 	call.PkgPath = realm
 	call.FuncName = splitMethod[1]
 
-	values := map[string]any{}
+	// we need to query funcs to correctly correlate arguments
+	funcs, err := p.queryFuncs(realm)
+	if err != nil {
+		return fmt.Errorf("unable to query funcs on %q: %w", realm, err)
+	}
+
+	params, ok := funcs[call.FuncName]
+	if !ok {
+		return fmt.Errorf("unknown function call %q", call.FuncName)
+	}
+
+	values := make(map[string]string)
 	query := req.URL.Query()
-	for key, val := range query {
-		switch len(val) {
+	for key, vals := range query {
+		switch len(vals) {
 		case 0:
 			continue
 		case 1:
-			values[key] = val[0]
+			values[key] = vals[0]
 		default:
-			values[key] = val
+			var s strings.Builder
+			s.WriteRune('[')
+			for i, val := range vals {
+				if i > 0 {
+					s.WriteRune(',')
+				}
+
+				s.WriteString(strconv.Quote(val))
+			}
+			s.WriteRune(']')
+			values[key] = s.String()
 		}
 	}
 
-	var err error
-	call.JSONRequest, err = json.Marshal(values)
-	if err != nil {
-		return fmt.Errorf("marshal query to json error: %w", err)
+	call.Args = make([]string, 0, len(params))
+	for _, param := range params {
+		if param.Name == "" || param.Name == "_" {
+			continue
+		}
+
+		v, ok := values[param.Name]
+		if !ok {
+			return fmt.Errorf("missing field %q in query", param.Name)
+		}
+
+		call.Args = append(call.Args, string(v))
 	}
 
 	account, err := p.getSignerAccount()
@@ -147,11 +177,69 @@ func (p *Proxy) handlePost(res http.ResponseWriter, req *http.Request) error {
 	call.PkgPath = realm
 	call.FuncName = splitMethod[1]
 
-	// Read request body
-	var err error
-	call.JSONRequest, err = io.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		return fmt.Errorf("Error reading request body: %w", err)
+		return fmt.Errorf("error reading request body: %w", err)
+	}
+
+	body = bytes.TrimSpace(body)
+	if len(body) < 2 {
+		return fmt.Errorf("invalid request body, should be an array or an object")
+	}
+
+	// we need to query funcs to correctly correlate arguments
+	funcs, err := p.queryFuncs(realm)
+	if err != nil {
+		return fmt.Errorf("unable to query funcs on %q: %w", realm, err)
+	}
+
+	params, ok := funcs[call.FuncName]
+	if !ok {
+		return fmt.Errorf("unknown function call %q", call.FuncName)
+	}
+
+	call.Args = make([]string, 0, len(params))
+	switch {
+	case body[0] == '{' && body[len(body)-1] == '}':
+		var obj map[string]json.RawMessage
+		if err := json.Unmarshal(body, &obj); err != nil {
+			return fmt.Errorf("invalid request body object: %w", err)
+		}
+
+		for _, param := range params {
+			if param.Name == "" || param.Name == "_" {
+				continue
+			}
+
+			v, ok := obj[param.Name]
+			if !ok {
+				return fmt.Errorf("missing field %q in request", param.Name)
+			}
+
+			if unquoted, err := strconv.Unquote(string(v)); err == nil {
+				call.Args = append(call.Args, unquoted)
+				continue
+			}
+
+			call.Args = append(call.Args, string(v))
+		}
+
+	case body[0] == '[' && body[len(body)-1] == ']':
+		var obj []json.RawMessage
+		if err := json.Unmarshal(body, &obj); err != nil {
+			return fmt.Errorf("invalid request body object: %w", err)
+		}
+
+		if len(obj) != len(params) {
+			return fmt.Errorf("invalid number of arguments, have %d need %d ", len(obj), len(params))
+		}
+
+		for _, o := range obj {
+			call.Args = append(call.Args, string(o))
+		}
+
+	default:
+		return fmt.Errorf("invalid request body, should be an array or an object")
 	}
 
 	account, err := p.getSignerAccount()
@@ -228,7 +316,7 @@ func (p *Proxy) call(w io.Writer, cfg gnoclient.BaseTxCfg, call gnoclient.MsgCal
 		"method", call.FuncName,
 		"gazWanted", cfg.GasWanted,
 		"gazFee", cfg.GasFee,
-		"request", string(call.JSONRequest))
+		"args", call.Args)
 
 	res, err := p.Call(cfg, call)
 	if err != nil {
@@ -328,11 +416,6 @@ func (p *Proxy) writeJSON(w io.Writer, data any) error {
 	return nil
 }
 
-func (p *Proxy) logTm2Error(err error, msg string, args ...any) {
-	if werr, ok := err.(errors.Error); ok {
-		p.logger.Error(msg, "error", err, "cause", errors.Cause(werr))
-	} else {
-		p.logger.Error(msg, "error", err)
-	}
-
+func (p *Proxy) logTm2Error(err error, msg string) {
+	p.logger.Error(fmt.Sprintf("%s: \n%+v", msg, err))
 }
