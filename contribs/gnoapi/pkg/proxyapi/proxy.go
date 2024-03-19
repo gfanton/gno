@@ -331,8 +331,8 @@ func (p *Proxy) call(w http.ResponseWriter, cfg gnoclient.BaseTxCfg, call gnocli
 	}
 
 	res2 := struct {
-		Data    json.RawMessage `json:"data"`
-		GasUsed int64           `json:"gasUsed"`
+		Data    json.RawMessage `json:"Data"`
+		GasUsed int64           `json:"GasUsed"`
 	}{
 		Data:    json.RawMessage(res.DeliverTx.Data),
 		GasUsed: res.CheckTx.GasUsed,
