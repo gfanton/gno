@@ -233,6 +233,11 @@ func (p *Proxy) handlePost(res http.ResponseWriter, req *http.Request) error {
 		}
 
 		for _, o := range obj {
+			if unquoted, err := strconv.Unquote(string(o)); err == nil {
+				call.Args = append(call.Args, unquoted)
+				continue
+			}
+
 			call.Args = append(call.Args, string(o))
 		}
 
