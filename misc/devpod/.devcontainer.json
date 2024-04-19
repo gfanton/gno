@@ -1,0 +1,11 @@
+{
+    "name": "Gnoland Dev Container",
+    "context": "../..",
+    "dockerFile": "Dockerfile",
+    "repositories": ["https://github.com/gnolang/gno"],
+    "workspaceFolder": "/workspace/gno",
+    "shutdownAction": "stopContainer",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    }
+}
