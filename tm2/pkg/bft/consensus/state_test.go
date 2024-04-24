@@ -59,6 +59,11 @@ x * TestHalt1 - if we see +2/3 precommits after timing out into new round, we sh
 
 */
 
+func (cs *ConsensusState) getRoundStateUnsafe() *cstypes.RoundState {
+	rs := cs.RoundState // copy
+	return &rs
+}
+
 // ----------------------------------------------------------------------------------------------------
 // ProposeSuite
 
@@ -81,7 +86,7 @@ func TestStateProposerSelection0(t *testing.T) {
 	ensureNewRound(newRoundCh, height, round)
 
 	// Commit a block and ensure proposer for the next height is correct.
-	prop := cs1.GetRoundState().Validators.GetProposer()
+	prop := cs1.getRoundStateUnsafe().Validators.GetProposer()
 	address := cs1.privValidator.GetPubKey().Address()
 	if prop.Address != address {
 		t.Fatalf("expected proposer to be validator %d. Got %X", 0, prop.Address)
@@ -90,13 +95,13 @@ func TestStateProposerSelection0(t *testing.T) {
 	// Wait for complete proposal.
 	ensureNewProposal(proposalCh, height, round)
 
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	signAddVotes(cs1, types.PrecommitType, rs.ProposalBlock.Hash(), rs.ProposalBlockParts.Header(), vss[1:]...)
 
 	// Wait for new round so next validator is set.
 	ensureNewRound(newRoundCh, height+1, 0)
 
-	prop = cs1.GetRoundState().Validators.GetProposer()
+	prop = cs1.getRoundStateUnsafe().Validators.GetProposer()
 	addr := vss[1].GetPubKey().Address()
 	if prop.Address != addr {
 		panic(fmt.Sprintf("expected proposer to be validator %d. Got %X", 1, prop.Address))
@@ -126,14 +131,14 @@ func TestStateProposerSelection2(t *testing.T) {
 
 	// everyone just votes nil. we get a new proposer each round
 	for i := 0; i < len(vss); i++ {
-		prop := cs1.GetRoundState().Validators.GetProposer()
+		prop := cs1.getRoundStateUnsafe().Validators.GetProposer()
 		addr := vss[(i+round)%len(vss)].GetPubKey().Address()
 		correctProposer := addr
 		if prop.Address != correctProposer {
 			panic(fmt.Sprintf("expected RoundState.Validators.GetProposer() to be validator %d. Got %X", (i+2)%len(vss), prop.Address))
 		}
 
-		rs := cs1.GetRoundState()
+		rs := cs1.getRoundStateUnsafe()
 		signAddVotes(cs1, types.PrecommitType, nil, rs.ProposalBlockParts.Header(), vss[1:]...)
 		ensureNewRound(newRoundCh, height, i+round+1) // wait for the new round event each round
 		incrementRound(vss[1:]...)
@@ -160,7 +165,7 @@ func TestStateEnterProposeNoPrivValidator(t *testing.T) {
 	// if we're not a validator, EnterPropose should timeout
 	ensureNewTimeout(timeoutCh, height, round, cs.config.TimeoutPropose.Nanoseconds())
 
-	if cs.GetRoundState().Proposal != nil {
+	if cs.getRoundStateUnsafe().Proposal != nil {
 		t.Error("Expected to make no proposal, since no privValidator")
 	}
 }
@@ -189,7 +194,7 @@ func TestStateEnterProposeYesPrivValidator(t *testing.T) {
 	ensureNewProposal(proposalCh, height, round)
 
 	// Check that Proposal, ProposalBlock, ProposalBlockParts are set.
-	rs := cs.GetRoundState()
+	rs := cs.getRoundStateUnsafe()
 	if rs.Proposal == nil {
 		t.Error("rs.Proposal should be set")
 	}
@@ -289,7 +294,7 @@ func TestStateFullRound1(t *testing.T) {
 	ensureNewRound(newRoundCh, height, round)
 
 	ensureNewProposal(propCh, height, round)
-	propBlockHash := cs.GetRoundState().ProposalBlock.Hash()
+	propBlockHash := cs.getRoundStateUnsafe().ProposalBlock.Hash()
 
 	ensurePrevote(voteCh, height, round) // wait for prevote
 	validatePrevote(cs, round, vss[0], propBlockHash)
@@ -349,7 +354,7 @@ func TestStateFullRound2(t *testing.T) {
 	ensurePrevote(voteCh, height, round) // prevote
 
 	// we should be stuck in limbo waiting for more prevotes
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	propBlockHash, propPartsHeader := rs.ProposalBlock.Hash(), rs.ProposalBlockParts.Header()
 
 	// prevote arrives from vs2:
@@ -400,7 +405,7 @@ func TestStateLockNoPOL(t *testing.T) {
 	ensureNewRound(newRoundCh, height, round)
 
 	ensureNewProposal(proposalCh, height, round)
-	roundState := cs1.GetRoundState()
+	roundState := cs1.getRoundStateUnsafe()
 	theBlockHash := roundState.ProposalBlock.Hash()
 	thePartSetHeader := roundState.ProposalBlockParts.Header()
 
@@ -441,7 +446,7 @@ func TestStateLockNoPOL(t *testing.T) {
 	// now we're on a new round and not the proposer, so wait for timeout
 	ensureNewTimeout(timeoutProposeCh, height, round, cs1.config.Propose(round).Nanoseconds())
 
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 
 	if rs.ProposalBlock != nil {
 		panic("Expected proposal block to be nil")
@@ -483,7 +488,7 @@ func TestStateLockNoPOL(t *testing.T) {
 	incrementRound(vs2)
 
 	ensureNewProposal(proposalCh, height, round)
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 
 	// now we're on a new round and are the proposer
 	if !bytes.Equal(rs.ProposalBlock.Hash(), rs.LockedBlock.Hash()) {
@@ -582,7 +587,7 @@ func TestStateLockPOLRelock(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	theBlockHash := rs.ProposalBlock.Hash()
 	theBlockParts := rs.ProposalBlockParts.Header()
 
@@ -679,7 +684,7 @@ func TestStateLockPOLUnlock(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	theBlockHash := rs.ProposalBlock.Hash()
 	theBlockParts := rs.ProposalBlockParts.Header()
 
@@ -773,7 +778,7 @@ func TestStateLockPOLSafety1(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	propBlock := rs.ProposalBlock
 
 	ensurePrevote(voteCh, height, round)
@@ -813,7 +818,7 @@ func TestStateLockPOLSafety1(t *testing.T) {
 
 	ensureNewProposal(proposalCh, height, round)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 
 	if rs.LockedBlock != nil {
 		panic("we should not be locked!")
@@ -994,7 +999,7 @@ func TestProposeValidBlock(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	propBlock := rs.ProposalBlock
 	propBlockHash := propBlock.Hash()
 
@@ -1056,7 +1061,7 @@ func TestProposeValidBlock(t *testing.T) {
 
 	ensureNewProposal(proposalCh, height, round)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 	assert.True(t, bytes.Equal(rs.ProposalBlock.Hash(), propBlockHash))
 	assert.True(t, bytes.Equal(rs.ProposalBlock.Hash(), rs.ValidBlock.Hash()))
 	assert.True(t, rs.Proposal.POLRound == rs.ValidRound)
@@ -1090,7 +1095,7 @@ func TestSetValidBlockOnDelayedPrevote(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	propBlock := rs.ProposalBlock
 	propBlockHash := propBlock.Hash()
 	propBlockParts := propBlock.MakePartSet(partSize)
@@ -1110,7 +1115,7 @@ func TestSetValidBlockOnDelayedPrevote(t *testing.T) {
 	// we should have precommitted
 	validatePrecommit(t, cs1, round, -1, vss[0], nil, nil)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 
 	assert.True(t, rs.ValidBlock == nil)
 	assert.True(t, rs.ValidBlockParts == nil)
@@ -1121,7 +1126,7 @@ func TestSetValidBlockOnDelayedPrevote(t *testing.T) {
 
 	ensureNewValidBlock(validBlockCh, height, round)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 
 	assert.True(t, bytes.Equal(rs.ValidBlock.Hash(), propBlockHash))
 	assert.True(t, rs.ValidBlockParts.Header().Equals(propBlockParts.Header()))
@@ -1181,7 +1186,7 @@ func TestSetValidBlockOnDelayedProposal(t *testing.T) {
 	}
 
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 
 	assert.True(t, bytes.Equal(rs.ValidBlock.Hash(), propBlockHash))
 	assert.True(t, rs.ValidBlockParts.Header().Equals(propBlockParts.Header()))
@@ -1246,7 +1251,7 @@ func TestWaitingTimeoutProposeOnNewRound(t *testing.T) {
 	round++ // moving to the next round
 	ensureNewRound(newRoundCh, height, round)
 
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	assert.True(t, rs.Step == cstypes.RoundStepPropose) // P0 does not prevote before timeoutPropose expires
 
 	ensureNewTimeout(timeoutWaitCh, height, round, cs1.config.Propose(round).Nanoseconds())
@@ -1359,7 +1364,7 @@ func TestEmitNewValidBlockEventOnCommitWithoutBlock(t *testing.T) {
 	signAddVotes(cs1, types.PrecommitType, propBlockHash, propBlockParts.Header(), vs2, vs3, vs4)
 	ensureNewValidBlock(validBlockCh, height, round)
 
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	assert.True(t, rs.Step == cstypes.RoundStepCommit)
 	assert.True(t, rs.ProposalBlock == nil)
 	assert.True(t, rs.ProposalBlockParts.Header().Equals(propBlockParts.Header()))
@@ -1398,7 +1403,7 @@ func TestCommitFromPreviousRound(t *testing.T) {
 
 	ensureNewValidBlock(validBlockCh, height, round)
 
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	assert.True(t, rs.Step == cstypes.RoundStepCommit)
 	assert.True(t, rs.CommitRound == vs2.Round)
 	assert.True(t, rs.ProposalBlock == nil)
@@ -1449,7 +1454,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	theBlockHash := rs.ProposalBlock.Hash()
 	theBlockParts := rs.ProposalBlockParts.Header()
 
@@ -1468,7 +1473,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 	signAddVotes(cs1, types.PrecommitType, theBlockHash, theBlockParts, vs4)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 	assert.True(t, rs.TriggeredTimeoutPrecommit)
 
 	ensureNewBlockHeader(newBlockHeader, height, theBlockHash)
@@ -1478,7 +1483,7 @@ func TestStartNextHeightCorrectly(t *testing.T) {
 	height, round = height+1, 0
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewTimeout(timeoutProposeCh, height, round, cs1.config.Propose(round).Nanoseconds())
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 	assert.False(t, rs.TriggeredTimeoutPrecommit, "triggeredTimeoutPrecommit should be false at the beginning of each round")
 }
 
@@ -1510,7 +1515,7 @@ func TestFlappyResetTimeoutPrecommitUponNewHeight(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	theBlockHash := rs.ProposalBlock.Hash()
 	theBlockParts := rs.ProposalBlockParts.Header()
 
@@ -1538,7 +1543,7 @@ func TestFlappyResetTimeoutPrecommitUponNewHeight(t *testing.T) {
 	ensureNewRound(newRoundCh, height+1, 0)
 	ensureNewProposal(proposalCh, height+1, 0)
 
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 	assert.False(t, rs.TriggeredTimeoutPrecommit, "triggeredTimeoutPrecommit should be false at the beginning of each height")
 }
 
@@ -1656,7 +1661,7 @@ func TestFlappyStateHalt1(t *testing.T) {
 
 	ensureNewRound(newRoundCh, height, round)
 	ensureNewProposal(proposalCh, height, round)
-	rs := cs1.GetRoundState()
+	rs := cs1.getRoundStateUnsafe()
 	propBlock := rs.ProposalBlock
 	propBlockParts := propBlock.MakePartSet(partSize)
 
@@ -1682,7 +1687,7 @@ func TestFlappyStateHalt1(t *testing.T) {
 	round++ // moving to the next round
 
 	ensureNewRound(newRoundCh, height, round)
-	rs = cs1.GetRoundState()
+	rs = cs1.getRoundStateUnsafe()
 
 	t.Log("### ONTO ROUND 1")
 	/*Round2
