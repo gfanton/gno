@@ -1,0 +1,11 @@
+go 1.21
+
+use (
+	.
+	./contribs
+	./gno.land
+	./gnovm
+	./misc
+	./misc/loop
+	./tm2
+)
