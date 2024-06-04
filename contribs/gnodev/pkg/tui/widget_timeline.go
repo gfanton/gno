@@ -117,10 +117,6 @@ func (m *TimelineModel) evaluateBoundary() {
 }
 
 func (m TimelineModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m.UpdateWidget(msg)
-}
-
-func (m TimelineModel) UpdateWidget(msg tea.Msg) (IWidget, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width

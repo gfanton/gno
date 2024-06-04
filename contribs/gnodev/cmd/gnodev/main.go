@@ -20,7 +20,6 @@ import (
 	"github.com/gnolang/gno/gnovm/pkg/gnoenv"
 	"github.com/gnolang/gno/tm2/pkg/commands"
 	"github.com/gnolang/gno/tm2/pkg/crypto"
-	osm "github.com/gnolang/gno/tm2/pkg/os"
 )
 
 const (
@@ -229,19 +228,27 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	}
 
 	// Setup Raw Terminal
-	rt, restore, err := setupRawTerm(cfg, io)
-	if err != nil {
-		return fmt.Errorf("unable to init raw term: %w", err)
-	}
-	defer restore()
+	// rt, restore, err := setupRawTerm(cfg, io)
+	// if err != nil {
+	// 	return fmt.Errorf("unable to init raw term: %w", err)
+	// }
+	// defer restore()
 
 	// Setup trap signal
-	osm.TrapSignal(func() {
-		cancel(nil)
-		restore()
-	})
+	// osm.TrapSignal(func() {
+	// 	cancel(nil)
+	// })
 
-	logger := setuplogger(cfg, rt)
+	app, out := NewTUIApp(ctx, io.Out())
+	go func() {
+		if err := app.Run(); err != nil {
+			cancel(fmt.Errorf("unable to run tapp: %w", err))
+		} else {
+			cancel(nil)
+		}
+	}()
+
+	logger := setuplogger(cfg, out)
 	loggerEvents := logger.WithGroup(EventServerLogName)
 	emitterServer := emitter.NewServer(loggerEvents)
 
@@ -314,13 +321,28 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 
 	// Add node pkgs to watcher
 	watcher.AddPackages(devNode.ListPkgs()...)
+	go func() {
+		err := watchForUpdates(ctx, logger, devNode, watcher)
+		cancel(err)
+	}()
 
 	if !cfg.serverMode {
 		logger.WithGroup("--- READY").Info("for commands and help, press `h`")
 	}
 
+	app.AddCommands(
+		newNodeReloadCommand(ctx, logger, devNode),
+		newNodeResetCommand(ctx, logger, devNode),
+		newAccountCommand(ctx, logger, book),
+	)
+
 	// Run the main event loop
-	return runEventLoop(ctx, logger, book, rt, devNode, watcher)
+	<-ctx.Done()
+	if err := context.Cause(ctx); err != context.Canceled {
+		return err
+	}
+
+	return nil
 }
 
 var helper string = `
@@ -335,29 +357,7 @@ Ctrl+R      Reset	 - Reset application to it's initial/save state.
 Ctrl+C      Exit	 - Exit the application
 `
 
-func runEventLoop(
-	ctx context.Context,
-	logger *slog.Logger,
-	bk *address.Book,
-	rt *rawterm.RawTerm,
-	dnode *gnodev.Node,
-	watch *watcher.PackageWatcher,
-) error {
-	// XXX: move this in above, but we need to have a proper struct first
-	// XXX: make this configurable
-	exported := 0
-	path, err := os.MkdirTemp("", "gnodev-export")
-	if err != nil {
-		return fmt.Errorf("unable to create `export` directory: %w", err)
-	}
-
-	defer func() {
-		if exported == 0 {
-			_ = os.RemoveAll(path)
-		}
-	}()
-
-	keyPressCh := listenForKeyPress(logger.WithGroup(KeyPressLogName), rt)
+func watchForUpdates(ctx context.Context, logger *slog.Logger, dnode *gnodev.Node, watch *watcher.PackageWatcher) error {
 	for {
 		var err error
 
@@ -379,81 +379,8 @@ func runEventLoop(
 				logger.WithGroup(NodeLogName).
 					Error("unable to reload node", "err", err)
 			}
-
-		case key, ok := <-keyPressCh:
-			if !ok {
-				return nil
-			}
-
-			logger.WithGroup(KeyPressLogName).Debug(
-				fmt.Sprintf("<%s>", key.String()),
-			)
-
-			switch key.Upper() {
-			case rawterm.KeyH: // Helper
-				logger.Info("Gno Dev Helper", "helper", helper)
-			case rawterm.KeyA: // Accounts
-				logAccounts(logger.WithGroup(AccountsLogName), bk, dnode)
-			case rawterm.KeyR: // Reload
-				logger.WithGroup(NodeLogName).Info("reloading...")
-				if err = dnode.ReloadAll(ctx); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to reload node", "err", err)
-				}
-
-			case rawterm.KeyCtrlR: // Reset
-				logger.WithGroup(NodeLogName).Info("reseting node state...")
-				if err = dnode.Reset(ctx); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to reset node state", "err", err)
-				}
-
-			case rawterm.KeyCtrlS: // Save
-				logger.WithGroup(NodeLogName).Info("saving state...")
-				if err := dnode.SaveCurrentState(ctx); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to save node state", "err", err)
-				}
-
-			case rawterm.KeyE:
-				logger.WithGroup(NodeLogName).Info("exporting state...")
-				doc, err := dnode.ExportStateAsGenesis(ctx)
-				if err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to export node state", "err", err)
-					continue
-				}
-
-				docfile := filepath.Join(path, fmt.Sprintf("export_%d.jsonl", exported))
-				if err := doc.SaveAs(docfile); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to save genesis", "err", err)
-				}
-				exported++
-
-				logger.WithGroup(NodeLogName).Info("node state exported", "file", docfile)
-			case rawterm.KeyN: // Next tx
-				logger.Info("moving forward...")
-				if err := dnode.MoveToNextTX(ctx); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to move forward", "err", err)
-				}
-
-			case rawterm.KeyP: // Next tx
-				logger.Info("moving backward...")
-				if err := dnode.MoveToPreviousTX(ctx); err != nil {
-					logger.WithGroup(NodeLogName).
-						Error("unable to move backward", "err", err)
-				}
-
-			case rawterm.KeyCtrlC: // Exit
-				return nil
-			default:
-			}
-
-			// Reset listen for the next keypress
-			keyPressCh = listenForKeyPress(logger.WithGroup(KeyPressLogName), rt)
 		}
+
 	}
 }
 

@@ -32,7 +32,7 @@ func NewStatsWidget(width int) (m StatsWidgetModel) {
 	return
 }
 
-func (m StatsWidgetModel) UpdateWidget(msg tea.Msg) (IWidget, tea.Cmd) {
+func (m StatsWidgetModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -62,10 +62,6 @@ func (m StatsWidgetModel) Name() string {
 
 func (m StatsWidgetModel) Init() tea.Cmd {
 	return nil
-}
-
-func (m StatsWidgetModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m.UpdateWidget(msg)
 }
 
 func (m StatsWidgetModel) View() string {
