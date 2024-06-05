@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/address"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/dev"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/tui"
@@ -82,7 +83,6 @@ func newAccountCommand(ctx context.Context, logger *slog.Logger, bk *address.Boo
 						qret.BaseAccount.GetCoins().String(),
 					}
 				}
-
 			}
 			return tui.RunWidget(tui.Widget{
 				Name:  "Account",
@@ -90,4 +90,65 @@ func newAccountCommand(ctx context.Context, logger *slog.Logger, bk *address.Boo
 			})
 		},
 	}
+}
+
+func newRealmCommand(ctx context.Context, logger *slog.Logger, node *dev.Node) tui.Command {
+	var width int
+	return tui.Command{
+		Name:            "Realm",
+		HelpDescription: "Display realm",
+		KeysMap:         "v",
+		Exec: func() tea.Msg {
+			return tui.RunWidget(tui.Widget{
+				Handler: func(msg tea.Msg) tea.Cmd {
+					switch msg := msg.(type) {
+					case tea.WindowSizeMsg:
+						width = msg.Width
+					case tui.BrowserUpdateInputMsg:
+						md, err := renderRealmMarkdown(msg.Input, width)
+						if err != nil {
+							logger.Error("unable to render realm", "err", err)
+							return tui.BrowserUpdateContent(err.Error())
+						}
+
+						// return tea.Printf("hello : %s", msg.Input)
+						return tui.BrowserUpdateContent(md)
+					}
+
+					return nil
+				},
+				Model: tui.NewBrowserWidget(""),
+			})
+		},
+	}
+}
+
+func renderRealmMarkdown(realm string, width int) (string, error) {
+	args := "" // XXX
+	path := "vm/qrender"
+	data := []byte(fmt.Sprintf("%s\n%s", realm, args))
+
+	qres, err := client.NewLocal().ABCIQuery(path, data)
+	if err != nil {
+		return "", fmt.Errorf("unable to render realm %q: %w", realm, err)
+	}
+
+	if qres.Response.Error != nil {
+		return "", fmt.Errorf("render failed: %w", qres.Response.Error)
+	}
+
+	tr, err := glamour.NewTermRenderer(
+		glamour.WithStandardStyle(glamour.DraculaStyle),
+		glamour.WithWordWrap(width),
+	)
+	if err != nil {
+		return "", fmt.Errorf("unable to get render view: %w", err)
+	}
+
+	view, err := tr.RenderBytes(qres.Response.Data)
+	if err != nil {
+		return "", fmt.Errorf("uanble to render markdown view: %w", err)
+	}
+
+	return string(view), nil
 }

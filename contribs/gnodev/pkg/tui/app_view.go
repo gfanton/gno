@@ -102,7 +102,7 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// forward messgae to widget
 	var cmd tea.Cmd
-	if !m.widget.isRunning() {
+	if m.widget.isRunning() {
 		m.widget, cmd = m.widget.update(msg)
 	}
 

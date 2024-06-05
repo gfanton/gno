@@ -334,6 +334,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 		newNodeReloadCommand(ctx, logger, devNode),
 		newNodeResetCommand(ctx, logger, devNode),
 		newAccountCommand(ctx, logger, book),
+		newRealmCommand(ctx, logger, devNode),
 	)
 
 	// Run the main event loop
@@ -345,17 +346,17 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	return nil
 }
 
-var helper string = `
-P           Previous TX	 - Go to the previous tx
-N           Next TX	 - Go to the next tx
-E           Export	 - Export the current state as genesis doc
-A           Accounts	 - Display known accounts and balances
-H           Help	 - Display this message
-R           Reload	 - Reload all packages to take change into account.
-Ctrl+S      Save State	 - Save the current state
-Ctrl+R      Reset	 - Reset application to it's initial/save state.
-Ctrl+C      Exit	 - Exit the application
-`
+// var helper string = `
+// P           Previous TX	 - Go to the previous tx
+// N           Next TX	 - Go to the next tx
+// E           Export	 - Export the current state as genesis doc
+// A           Accounts	 - Display known accounts and balances
+// H           Help	 - Display this message
+// R           Reload	 - Reload all packages to take change into account.
+// Ctrl+S      Save State	 - Save the current state
+// Ctrl+R      Reset	 - Reset application to it's initial/save state.
+// Ctrl+C      Exit	 - Exit the application
+// `
 
 func watchForUpdates(ctx context.Context, logger *slog.Logger, dnode *gnodev.Node, watch *watcher.PackageWatcher) error {
 	for {
