@@ -250,7 +250,8 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 
 	logger := setuplogger(cfg, out)
 	loggerEvents := logger.WithGroup(EventServerLogName)
-	emitterServer := emitter.NewServer(loggerEvents)
+	emitterServer := emitter.NewWSServer(loggerEvents)
+	emitterLocal := emitter.NewLocalServer()
 
 	// load keybase
 	book, err := setupAddressBook(logger.WithGroup(AccountsLogName), cfg)
@@ -274,7 +275,9 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	// Setup Dev Node
 	// XXX: find a good way to export or display node logs
 	nodeLogger := logger.WithGroup(NodeLogName)
-	nodeCfg := setupDevNodeConfig(cfg, logger, emitterServer, balances, pkgpaths)
+
+	combinedEmitter := emitter.Combine(emitterLocal, emitterServer)
+	nodeCfg := setupDevNodeConfig(cfg, logger, combinedEmitter, balances, pkgpaths)
 	devNode, err := setupDevNode(ctx, cfg, nodeCfg)
 	if err != nil {
 		return err
@@ -334,7 +337,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 		newNodeReloadCommand(ctx, logger, devNode),
 		newNodeResetCommand(ctx, logger, devNode),
 		newAccountCommand(ctx, logger, book),
-		newRealmCommand(ctx, logger, devNode),
+		newRealmCommand(ctx, emitterLocal),
 	)
 
 	// Run the main event loop

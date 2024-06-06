@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/address"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/dev"
+	"github.com/gnolang/gno/contribs/gnodev/pkg/emitter"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/tui"
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/bft/rpc/client"
@@ -92,8 +93,22 @@ func newAccountCommand(ctx context.Context, logger *slog.Logger, bk *address.Boo
 	}
 }
 
-func newRealmCommand(ctx context.Context, logger *slog.Logger, node *dev.Node) tui.Command {
+func newRealmCommand(ctx context.Context, emitter *emitter.LocalServer) tui.Command {
 	var width int
+
+	updateCmd := func(input string) tea.Cmd {
+		return func() tea.Msg {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-emitter.Sub():
+				return tui.BrowserUpdateInputMsg{
+					Input: input,
+				}
+			}
+		}
+	}
+
 	return tui.Command{
 		Name:            "Realm",
 		HelpDescription: "Display realm",
@@ -107,12 +122,13 @@ func newRealmCommand(ctx context.Context, logger *slog.Logger, node *dev.Node) t
 					case tui.BrowserUpdateInputMsg:
 						md, err := renderRealmMarkdown(msg.Input, width)
 						if err != nil {
-							logger.Error("unable to render realm", "err", err)
-							return tui.BrowserUpdateContent(err.Error())
+							md = err.Error()
 						}
 
-						// return tea.Printf("hello : %s", msg.Input)
-						return tui.BrowserUpdateContent(md)
+						return tea.Batch(
+							tui.BrowserUpdateContent(md),
+							updateCmd(msg.Input),
+						)
 					}
 
 					return nil
