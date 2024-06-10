@@ -29,6 +29,7 @@ var (
 			Background(lipgloss.Color("#25A065")).
 			Padding(0, 1).
 			Render
+
 	timeDescStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.AdaptiveColor{Light: "#04B575", Dark: "#04B575"}).
 			Render
