@@ -338,6 +338,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 		newNodeResetCommand(ctx, logger, devNode),
 		newAccountCommand(ctx, logger, book),
 		newRealmCommand(ctx, emitterLocal),
+		newTimelineCommand(ctx, logger, emitterLocal, devNode),
 	)
 
 	// Run the main event loop

@@ -26,17 +26,17 @@ func (n *Node) SaveCurrentState(ctx context.Context) error {
 }
 
 // Export the current state as list of txs
-func (n *Node) ExportCurrentState(ctx context.Context) ([]std.Tx, error) {
+func (n *Node) ExportCurrentState(ctx context.Context) ([]std.Tx, int, error) {
 	n.muNode.RLock()
 	defer n.muNode.RUnlock()
 
 	// Get current blockstore state
 	state, err := n.getState(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to save state: %s", err.Error())
+		return nil, 0, fmt.Errorf("unable to save state: %s", err.Error())
 	}
 
-	return state[:n.currentStateIndex], nil
+	return state[:], n.currentStateIndex, nil
 }
 
 func (n *Node) getState(ctx context.Context) ([]std.Tx, error) {
@@ -51,6 +51,17 @@ func (n *Node) getState(ctx context.Context) ([]std.Tx, error) {
 	return n.state, nil
 }
 
+// MoveTo changes the current position of the node to a specified index.
+// The index is expected to fall within the node's state boundary
+// which ranges from 0 to the total number of states.
+// If the move is successful, the node is reloaded.
+func (n *Node) MoveTo(ctx context.Context, index int) error {
+	n.muNode.Lock()
+	defer n.muNode.Unlock()
+
+	return n.moveTo(ctx, index)
+}
+
 // MoveFrom adjusts the current state of the node by `x` transactions.
 // `x` can be negative to move backward or positive to move forward, however, index boundaries are respected
 // with a lower limit of 0 and upper limit equaling the total number of states.
@@ -59,7 +70,11 @@ func (n *Node) MoveFrom(ctx context.Context, x int) error {
 	n.muNode.Lock()
 	defer n.muNode.Unlock()
 
-	newIndex := n.currentStateIndex + x
+	index := n.currentStateIndex + x
+	return n.moveTo(ctx, index)
+}
+
+func (n *Node) moveTo(ctx context.Context, newIndex int) error {
 	state, err := n.getState(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to get current state: %w", err)

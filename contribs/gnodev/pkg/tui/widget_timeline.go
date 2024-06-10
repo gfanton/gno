@@ -45,6 +45,10 @@ type TimeAppendCellMsg struct {
 	Cell TimeCell
 }
 
+type TimeSetCellsMsg struct {
+	Cells []TimeCell
+}
+
 type TimelineSelectionMsg struct {
 	Sel  int
 	Cell TimeCell
@@ -58,14 +62,12 @@ type TimelineModel struct {
 	sel               int
 }
 
-func NewTimelineWidget(width int, cells []TimeCell, sel int) TimelineModel {
+func NewTimelineWidget(cells []TimeCell, sel int) TimelineModel {
 	m := TimelineModel{
-		width: width,
 		cells: cells,
-		sel:   0,
+		sel:   min(0, max(len(cells), sel)),
 	}
 
-	m.evaluateBoundary()
 	return m
 }
 
@@ -81,20 +83,30 @@ func (m TimelineModel) Current() TimeCell {
 	return m.cells[m.sel]
 }
 
-func (m TimelineModel) Destroy() error {
-	return nil
+func (m TimelineModel) Set(cells []TimeCell) TimelineModel {
+	m.cells = cells
+	m.sel = min(len(cells), m.sel)
+	m.evaluateBoundary()
+	return m
 }
 
 func (m TimelineModel) Append(cell TimeCell) TimelineModel {
+	if len(m.cells) == m.sel {
+		m.sel++
+	}
+
 	m.cells = append(m.cells, cell)
+	m.evaluateBoundary()
 	return m
 }
 
 func (m TimelineModel) GetSelection() tea.Msg {
-	return TimelineSelectionMsg{
-		Sel:  m.sel,
-		Cell: m.cells[m.sel],
+	msg := TimelineSelectionMsg{Sel: m.sel}
+	if m.sel > 0 {
+		msg.Cell = m.cells[m.sel-1]
 	}
+
+	return msg
 }
 
 func (m *TimelineModel) maxVisibleCells() int {
@@ -104,15 +116,16 @@ func (m *TimelineModel) maxVisibleCells() int {
 
 func (m *TimelineModel) evaluateBoundary() {
 	maxcells := m.maxVisibleCells()
-	m.upBound = m.lowBound + maxcells
+	m.upBound = min(len(m.cells)+1, m.lowBound+maxcells)
 
 	switch {
+	case m.sel == 0:
+		m.lowBound = 0
 	case m.sel < m.lowBound:
 		m.lowBound = max(0, m.sel)
 		m.upBound = m.lowBound + maxcells
 	case m.sel >= m.upBound:
-		maxcells := m.maxVisibleCells()
-		m.upBound = min(m.sel+1, len(m.cells))
+		m.upBound = min(m.sel+1, len(m.cells)+1)
 		m.lowBound = m.upBound - maxcells
 	}
 }
@@ -127,7 +140,7 @@ func (m TimelineModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			return m, m.GetSelection
 		case "right":
-			if newsel := m.sel + 1; newsel < len(m.cells) {
+			if newsel := m.sel + 1; newsel < len(m.cells)+1 {
 				m.sel = newsel
 			}
 
@@ -139,6 +152,8 @@ func (m TimelineModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.evaluateBoundary()
 	case TimeAppendCellMsg:
 		return m.Append(msg.Cell), nil
+	case TimeSetCellsMsg:
+		return m.Set(msg.Cells), nil
 	default:
 	}
 
@@ -150,12 +165,15 @@ var timeCountStyle = lipgloss.NewStyle().Margin(0, 1)
 func (m TimelineModel) renderCounter() string {
 	total := strconv.Itoa(len(m.cells))
 	return timeCountStyle.Render(
-		fmt.Sprintf(" %."+strconv.Itoa(len(total))+"d/%s", m.sel+1, total),
+		fmt.Sprintf(" %."+strconv.Itoa(len(total))+"d/%s", m.sel, total),
 	)
 }
 
 func (m TimelineModel) View() string {
 	var tline strings.Builder
+	if len(m.cells) == 0 {
+		return timeTitleStyle("Empty State")
+	}
 
 	// Draw timeline
 	for i := m.lowBound; i < m.upBound; i++ {
@@ -171,13 +189,20 @@ func (m TimelineModel) View() string {
 			tline.WriteString(timeInacativeCell)
 		}
 
-		if m.upBound != len(m.cells) &&
+		if m.upBound != len(m.cells)+1 &&
 			i == m.upBound-1 && m.lowBound%2 == 0 {
 			tline.WriteString(timeConnection)
 		}
 	}
 
-	currentCell := m.cells[m.sel]
+	var currentCell TimeCell
+	if m.sel > 0 {
+		currentCell = m.cells[m.sel-1]
+	} else {
+		currentCell.Title = "Genesis"
+		currentCell.Descritpion = "initial state"
+	}
+
 	counter := m.renderCounter()
 	return lipgloss.JoinVertical(lipgloss.Left,
 		lipgloss.JoinHorizontal(lipgloss.Center, tline.String(), counter),

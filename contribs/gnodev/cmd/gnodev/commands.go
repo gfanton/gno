@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/address"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/dev"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/emitter"
+	"github.com/gnolang/gno/contribs/gnodev/pkg/events"
 	"github.com/gnolang/gno/contribs/gnodev/pkg/tui"
+	"github.com/gnolang/gno/gno.land/pkg/sdk/vm"
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	"github.com/gnolang/gno/tm2/pkg/bft/rpc/client"
 	"github.com/gnolang/gno/tm2/pkg/std"
@@ -93,18 +96,117 @@ func newAccountCommand(ctx context.Context, logger *slog.Logger, bk *address.Boo
 	}
 }
 
+func newTimelineCommand(ctx context.Context, logger *slog.Logger, emitter *emitter.LocalServer, node *dev.Node) tui.Command {
+	type nextEventMsg struct {
+		evt events.Event
+	}
+
+	waitNextEvent := func() tea.Msg {
+		evt, ok := <-emitter.Recv(ctx)
+		if !ok {
+			return nil
+		}
+
+		return nextEventMsg{
+			evt: evt,
+		}
+	}
+
+	return tui.Command{
+		Name:            "Timeline",
+		HelpDescription: "cross the timeline",
+		KeysMap:         "t",
+		Exec: func() tea.Msg {
+			state, index, err := node.ExportCurrentState(ctx)
+			if err != nil {
+				logger.Error("unable to load txs", "err", err)
+				return nil
+			}
+
+			timecells := generateTimelineCells(state...)
+			return tui.RunWidget(tui.Widget{
+				InitCmd: func() tea.Cmd {
+					return waitNextEvent
+				},
+				Handler: func(msg tea.Msg) tea.Cmd {
+					switch msg := msg.(type) {
+					case nextEventMsg:
+
+						switch evt := msg.evt.(type) {
+						case events.TxResult:
+							cells := generateTimelineCells(evt.Tx)
+							return tea.Batch(func() tea.Msg {
+								return tui.TimeAppendCellMsg{
+									Cell: cells[0],
+								}
+							}, waitNextEvent)
+						case events.Reload, events.Reset:
+							return tea.Batch(func() tea.Msg {
+								state, _, err := node.ExportCurrentState(ctx)
+								if err != nil {
+									logger.Error("unable to load txs", "err", err)
+									return nil
+								}
+								cells := generateTimelineCells(state...)
+								return tui.TimeSetCellsMsg{
+									Cells: cells,
+								}
+							}, waitNextEvent)
+						}
+
+					case tui.TimelineSelectionMsg:
+						logger.Info("time traveling to tx", "index", msg.Sel)
+						return func() tea.Msg {
+							if err := node.MoveTo(ctx, msg.Sel); err != nil {
+								logger.Error("unable to move in time", "sel", msg.Sel, "err", err)
+							} else {
+								logger.Info("moved to tx success", "index", msg.Sel)
+							}
+							return nil
+						}
+					}
+
+					return nil
+				},
+				Model: tui.NewTimelineWidget(timecells, index),
+			})
+		},
+	}
+}
+
+func generateTimelineCells(txs ...std.Tx) []tui.TimeCell {
+	cells := make([]tui.TimeCell, len(txs))
+	for i, tx := range txs {
+		cell := &cells[i]
+		if len(tx.Msgs) == 0 {
+			cell.Title = "Emtpy"
+			continue
+		}
+
+		switch msg := tx.Msgs[0].(type) {
+		case vm.MsgCall:
+			cell.Title = fmt.Sprintf("MsgCall")
+			cell.Descritpion = fmt.Sprintf("%s.%s(%s)", msg.PkgPath, msg.Func,
+				strings.Join(msg.Args, ","))
+		case vm.MsgRun:
+			cell.Title = "msgrun"
+		case vm.MsgAddPackage:
+			cell.Title = "addpkg"
+		default:
+		}
+
+	}
+	return cells
+}
+
 func newRealmCommand(ctx context.Context, emitter *emitter.LocalServer) tui.Command {
 	var width int
 
 	updateCmd := func(input string) tea.Cmd {
 		return func() tea.Msg {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-emitter.Sub():
-				return tui.BrowserUpdateInputMsg{
-					Input: input,
-				}
+			<-emitter.Recv(ctx)
+			return tui.BrowserUpdateInputMsg{
+				Input: input,
 			}
 		}
 	}

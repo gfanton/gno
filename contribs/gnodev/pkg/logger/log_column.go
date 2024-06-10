@@ -76,7 +76,7 @@ func (cl *ColumnLogger) WithGroup(group string) slog.Handler {
 
 	nlog := cl.Logger.With() // clone logger
 	nlog.SetOutput(newColumeWriter(baseStyle, group, cl.writer))
-	nlog.SetColorProfile(cl.colorProfile)
+	// nlog.SetColorProfile(cl.colorProfile)
 	return &ColumnLogger{
 		Logger: nlog,
 		prefix: group,
@@ -90,13 +90,14 @@ func (cl *ColumnLogger) RegisterGroupColor(group string, color lipgloss.Color) {
 	cl.muColors.Unlock()
 }
 
-var lf = []byte{'\n'}
+var lf = []byte{'\r', '\n'}
 
 type columnWriter struct {
 	inline bool
 	style  lipgloss.Style
 	prefix string
 	writer io.Writer
+	muLog  sync.Mutex
 }
 
 func newColumeWriter(baseStyle lipgloss.Style, prefix string, writer io.Writer) *columnWriter {
@@ -116,6 +117,9 @@ func newColumeWriter(baseStyle lipgloss.Style, prefix string, writer io.Writer) 
 }
 
 func (cl *columnWriter) Write(buf []byte) (n int, err error) {
+	cl.muLog.Lock()
+	defer cl.muLog.Unlock()
+
 	for line := 0; len(buf) > 0; line++ {
 		i := bytes.IndexByte(buf, '\n')
 		todo := len(buf)

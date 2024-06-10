@@ -20,26 +20,6 @@ type TableWidgetModel struct {
 }
 
 func NewTableWidget(columns []string, rows ...[]string) TableWidgetModel {
-	// cols := make([]table.Column, len(columns))
-	// for i, col := range columns {
-	// 	cols[i] = table.Column{
-	// 		Title: col,
-	// 	}
-	// }
-
-	// rs := make([]table.Row, len(rows))
-	// for i, row := range rows {
-	// 	rs[i] = table.Row(row)
-	// }
-
-	// t := table.New(
-	// 	table.WithColumns(cols),
-	// 	table.WithRows(rs),
-	// )
-	// s := table.DefaultStyles()
-	// s.Header = s.Header.
-	// 	Bold(false)
-
 	return TableWidgetModel{
 		cols: columns,
 		rows: rows,

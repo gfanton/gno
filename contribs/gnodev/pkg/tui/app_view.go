@@ -15,7 +15,7 @@ type ViewModel struct {
 	commands   map[string]Command
 	width      int
 	height     int
-	buffer     BufferModel
+	buffer     *BufferModel
 	widget     Widget
 	currentSel int
 }
@@ -30,7 +30,7 @@ func AddCommandMsg(cmds ...Command) tea.Msg {
 	}
 }
 
-func NewViewModel(bm BufferModel, cmds ...Command) ViewModel {
+func NewViewModel(bm *BufferModel, cmds ...Command) ViewModel {
 	mcmds := make(map[string]Command)
 	for _, cmd := range cmds {
 		mcmds[cmd.KeysMap] = cmd
@@ -95,9 +95,7 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.addWidget(msg.widget)
 
 	case BufferUpdateMsg:
-		var cmd tea.Cmd
-		m.buffer, cmd = m.buffer.Update(msg)
-		return m, cmd
+		return m, m.buffer.Update(msg)
 	}
 
 	// forward messgae to widget

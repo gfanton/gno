@@ -1,11 +1,13 @@
 package emitter
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"sync"
 
 	"github.com/gnolang/gno/contribs/gnodev/pkg/events"
+	"github.com/gnolang/gno/gno.land/pkg/sdk/vm"
 	"github.com/gorilla/websocket"
 )
 
@@ -67,10 +69,7 @@ func (s *WSServer) emit(evt events.Event) {
 
 	jsonEvt := eventJSON{evt.Type(), evt}
 
-	s.logger.Info("sending event to clients",
-		"clients", len(s.clients),
-		"type", evt.Type(),
-		"event", evt)
+	s.logevent(evt)
 
 	for conn := range s.clients {
 		err := conn.WriteJSON(jsonEvt)
@@ -80,6 +79,45 @@ func (s *WSServer) emit(evt events.Event) {
 			delete(s.clients, conn)
 		}
 	}
+}
+
+func (s *WSServer) logevent(evt events.Event) {
+	var attrs []slog.Attr
+	attrs = append(attrs, slog.String("type", string(evt.Type())))
+	switch evt := evt.(type) {
+	case events.TxResult:
+		for _, msg := range evt.Tx.Msgs {
+			switch msg := msg.(type) {
+			case vm.MsgCall:
+				attrs = append(attrs, slog.Any("msg", map[string]any{
+					"Type":    "MsgCall",
+					"PkgPath": msg.PkgPath,
+					"Func":    msg.Func,
+					"Args":    msg.Args,
+				}))
+			case vm.MsgRun:
+				attrs = append(attrs, slog.Any("msg", map[string]any{
+					"Type":   "MsgRun",
+					"Pkg":    msg.Package,
+					"Caller": msg.Caller,
+					"Coins":  msg.Send,
+				}))
+			case vm.MsgAddPackage:
+				attrs = append(attrs, slog.Any("msg", map[string]any{
+					"Type":    "MsgAddPackage",
+					"Pkg":     msg.Package,
+					"Creator": msg.Creator,
+					"Deposit": msg.Deposit,
+				}))
+			default:
+			}
+		}
+
+	case events.Reload:
+	case events.Reset:
+	}
+
+	s.logger.LogAttrs(context.Background(), slog.LevelInfo, "sending event", attrs...)
 }
 
 func (s *WSServer) conns() []*websocket.Conn {
