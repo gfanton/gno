@@ -248,7 +248,7 @@ func validatePrevoteAndPrecommit(t *testing.T, cs *ConsensusState, thisRound, lo
 }
 
 func subscribeToVoter(cs *ConsensusState, addr crypto.Address) <-chan events.Event {
-	return events.SubscribeFiltered(cs.evsw, testSubscriber, func(event events.Event) bool {
+	ch := events.SubscribeFiltered(cs.evsw, testSubscriber, func(event events.Event) bool {
 		if vote, ok := event.(types.EventVote); ok {
 			if vote.Vote.ValidatorAddress == addr {
 				return true
@@ -256,6 +256,21 @@ func subscribeToVoter(cs *ConsensusState, addr crypto.Address) <-chan events.Eve
 		}
 		return false
 	})
+
+	// This modification addresses the deadlock issue outlined in issue
+	// #1320. By creating a buffered channel, we ensure that events are
+	// consumed even if the main thread is blocked. This prevents the
+	// deadlock that occurred when eventSwitch.FireEvent was blocked due to
+	// no available consumers for the event.
+	testch := make(chan events.Event, 1)
+	go func() {
+		defer close(testch)
+		for evt := range ch {
+			testch <- evt
+		}
+	}()
+
+	return testch
 }
 
 // -------------------------------------------------------------------------------

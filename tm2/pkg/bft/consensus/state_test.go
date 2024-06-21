@@ -3,6 +3,7 @@ package consensus
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -1805,5 +1806,22 @@ func TestStateOutputVoteStats(t *testing.T) {
 }
 
 func subscribe(evsw events.EventSwitch, protoevent events.Event) <-chan events.Event {
-	return events.SubscribeToEvent(evsw, testSubscriber, protoevent)
+	name := reflect.ValueOf(protoevent).Type().Name()
+	listenerID := fmt.Sprintf("%s-%s", testSubscriber, name)
+	ch := events.SubscribeToEvent(evsw, listenerID, protoevent)
+
+	// Similar to the change in common_test.go, this modification introduces
+	// a buffered channel and a separate goroutine for event consumption.
+	// This approach ensures that events are consumed asynchronously,
+	// thereby avoiding the deadlock situation described in the GitHub issue
+	// where the eventSwitch.FireEvent method was blocked.
+	testch := make(chan events.Event, 1)
+	go func() {
+		defer close(testch)
+		for evt := range ch {
+			testch <- evt
+		}
+	}()
+
+	return testch
 }
