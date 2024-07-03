@@ -568,17 +568,15 @@ func resolvePackagesPathFromArgs(cfg *devCfg, bk *address.Book, args []string) (
 }
 
 func resolveWebSocketRemote(target string) (string, error) {
-	_, remoteTarget, found := strings.Cut(target, "://")
-	if !found {
-		remoteTarget = "http://" + remoteTarget
+	if url, _, found := strings.Cut(target, "://"); !found {
+		target = "http://" + url
 	}
 
-	purl, err := url.Parse(remoteTarget)
+	purl, err := url.Parse(target)
 	if err != nil {
 		return "", fmt.Errorf("invalid web remote addr %q: %w", target, err)
 	}
 
-	purl.RawPath = "" // remove path if any
 	switch purl.Scheme {
 	case "https":
 		purl.Scheme = "wss"
