@@ -3,7 +3,7 @@
     const eventsReload = {{ .ReloadEvents | json }};
     
     // Establish the WebSocket connection to the event server
-    const ws = new WebSocket('ws://{{- .Remote -}}');
+    const ws = new WebSocket('{{- .Remote -}}');
     
     // `gracePeriod` mitigates reload loops due to excessive events. This period
     // occurs post-loading and lasts for the `graceTimeout` duration.

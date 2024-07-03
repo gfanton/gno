@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gnolang/gno/contribs/gnodev/pkg/address"
@@ -57,8 +59,8 @@ type devCfg struct {
 	txsFile      string
 
 	// Web Configuration
-	webListenerAddr     string
-	webRemoteHelperAddr string
+	webListenerAddr string
+	webRemoteAddr   string
 
 	// Node Configuration
 	minimal    bool
@@ -71,7 +73,8 @@ type devCfg struct {
 	unsafeAPI  bool
 }
 
-var defaultDevOptions = &devCfg{
+var defaultDevOptions = devCfg{
+	// Default value
 	chainId:             "dev",
 	maxGas:              10_000_000_000,
 	webListenerAddr:     "127.0.0.1:8888",
@@ -128,10 +131,10 @@ func (c *devCfg) RegisterFlags(fs *flag.FlagSet) {
 	)
 
 	fs.StringVar(
-		&c.webRemoteHelperAddr,
-		"web-help-remote",
-		defaultDevOptions.webRemoteHelperAddr,
-		"web server help page's remote addr (default to <node-rpc-listener>)",
+		&c.webRemoteAddr,
+		"web-remote",
+		defaultDevOptions.webRemoteAddr,
+		"web remote addr that will be used for client (default to <node-rpc-listener>)",
 	)
 
 	fs.StringVar(
@@ -308,6 +311,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	// Setup gnoweb
 	webhandler := setupGnoWebServer(logger.WithGroup(WebLogName), cfg, devNode)
 
+
 	// Setup unsafe APIs if enabled
 	if cfg.unsafeAPI {
 		mux.HandleFunc("/reset", func(res http.ResponseWriter, req *http.Request) {
@@ -323,11 +327,20 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 				res.WriteHeader(http.StatusInternalServerError)
 			}
 		})
+
+	remoteAddr := cfg.webRemoteAddr
+	if remoteAddr == "" {
+		remoteAddr = server.Addr
+	}
+
+	wsRemote, err := resolveWebSocketRemote(remoteAddr)
+	if err != nil {
+		return err
 	}
 
 	// Setup HotReload if needed
 	if !cfg.noWatch {
-		evtstarget := fmt.Sprintf("%s/_events", server.Addr)
+		evtstarget := fmt.Sprintf("%s/_events", wsRemote)
 		mux.Handle("/_events", emitterServer)
 		mux.Handle("/", emitter.NewMiddleware(evtstarget, webhandler))
 	} else {
@@ -552,4 +565,29 @@ func resolvePackagesPathFromArgs(cfg *devCfg, bk *address.Book, args []string) (
 	}
 
 	return paths, nil
+}
+
+func resolveWebSocketRemote(target string) (string, error) {
+	_, remoteTarget, found := strings.Cut(target, "://")
+	if !found {
+		remoteTarget = "http://" + remoteTarget
+	}
+
+	purl, err := url.Parse(remoteTarget)
+	if err != nil {
+		return "", fmt.Errorf("invalid web remote addr %q: %w", target, err)
+	}
+
+	purl.RawPath = "" // remove path if any
+	switch purl.Scheme {
+	case "https":
+		purl.Scheme = "wss"
+	case "", "http":
+		purl.Scheme = "ws"
+	case "ws", "wss": // do nothing
+	default:
+		return "", fmt.Errorf("note supported scheme %q", purl.Scheme)
+	}
+
+	return purl.String(), nil
 }
