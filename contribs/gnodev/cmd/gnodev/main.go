@@ -59,8 +59,9 @@ type devCfg struct {
 	txsFile      string
 
 	// Web Configuration
-	webListenerAddr string
-	webRemoteAddr   string
+	webListenerAddr     string
+	webRemoteAddr       string
+	webRemoteHelperAddr string
 
 	// Node Configuration
 	minimal    bool
@@ -135,6 +136,13 @@ func (c *devCfg) RegisterFlags(fs *flag.FlagSet) {
 		"web-remote",
 		defaultDevOptions.webRemoteAddr,
 		"web remote addr that will be used for client (default to <node-rpc-listener>)",
+	)
+
+	fs.StringVar(
+		&c.webRemoteHelperAddr,
+		"web-help-remote",
+		defaultDevOptions.webRemoteHelperAddr,
+		"web server help page's remote addr (default to <node-rpc-listener>)",
 	)
 
 	fs.StringVar(
