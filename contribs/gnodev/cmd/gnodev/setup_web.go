@@ -12,16 +12,12 @@ import (
 func setupGnoWebServer(logger *slog.Logger, cfg *devCfg, dnode *gnodev.Node) http.Handler {
 	webConfig := gnoweb.NewDefaultConfig()
 	webConfig.HelpChainID = cfg.chainId
-
-	webConfig.RemoteAddr = cfg.webRemoteAddr
-	if webConfig.RemoteAddr == "" {
-		webConfig.RemoteAddr = dnode.GetRemoteAddress()
-	}
+	webConfig.RemoteAddr = dnode.GetRemoteAddress()
 
 	// If `HelpRemote` is empty default it to `RemoteAddr`
 	webConfig.HelpRemote = cfg.webRemoteHelperAddr
 	if webConfig.HelpRemote == "" {
-		webConfig.HelpRemote = webConfig.RemoteAddr
+		webConfig.HelpRemote = dnode.GetRemoteAddress()
 	}
 
 	app := gnoweb.MakeApp(logger, webConfig)

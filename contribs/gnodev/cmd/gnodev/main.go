@@ -319,7 +319,6 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	// Setup gnoweb
 	webhandler := setupGnoWebServer(logger.WithGroup(WebLogName), cfg, devNode)
 
-
 	// Setup unsafe APIs if enabled
 	if cfg.unsafeAPI {
 		mux.HandleFunc("/reset", func(res http.ResponseWriter, req *http.Request) {
@@ -335,6 +334,7 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 				res.WriteHeader(http.StatusInternalServerError)
 			}
 		})
+	}
 
 	remoteAddr := cfg.webRemoteAddr
 	if remoteAddr == "" {
