@@ -415,6 +415,10 @@ func resolvePackagesPathFromArgs(cfg *devCfg, bk *address.Book, args []string) (
 		return nil, fmt.Errorf("unable to get deploy key %q", cfg.deployKey)
 	}
 
+	if len(args) == 0 {
+		args = append(args, ".") // add current dir if none are provided
+	}
+
 	for _, arg := range args {
 		path, err := gnodev.ResolvePackagePathQuery(bk, arg)
 		if err != nil {
@@ -430,7 +434,7 @@ func resolvePackagesPathFromArgs(cfg *devCfg, bk *address.Book, args []string) (
 	}
 
 	// Add examples folder if minimal is set to false
-	if !cfg.minimal {
+	if cfg.minimal {
 		paths = append(paths, gnodev.PackagePath{
 			Path:    filepath.Join(cfg.root, "examples"),
 			Creator: defaultKey,
