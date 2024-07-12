@@ -57,7 +57,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Emit(evt events.Event) {
-	go s.emit(evt)
+	s.emit(evt)
 }
 
 type eventJSON struct {
