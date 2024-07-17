@@ -10,6 +10,7 @@ import (
 	"go/parser"
 	"go/scanner"
 	"go/token"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,7 +92,13 @@ type fmtProcessFileFunc func(file string, io commands.IO) []byte
 
 func execFmt(cfg *fmtCfg, args []string, io commands.IO) error {
 	if len(args) == 0 {
-		return flag.ErrHelp
+		if cfg.write {
+			io.ErrPrintln("unable to use write while using stdin")
+			return flag.ErrHelp
+		}
+
+		// process stdin
+		return fmtProcessStdin(cfg, io)
 	}
 
 	paths, err := targetsFromPatterns(args)
@@ -192,6 +199,108 @@ func fmtProcessDiff(file string, data []byte, io commands.IO) bool {
 }
 
 func fmtFormatFileImports(cfg *fmtCfg, io commands.IO) (fmtProcessFileFunc, error) {
+	p, err := fmtNewFSProcessor(cfg, io)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(file string, io commands.IO) []byte {
+		data, err := p.FormatFile(file)
+		if err == nil {
+			return data
+		}
+
+		if !fmtPrintScannerError(err, io) {
+			io.ErrPrintfln("format error: %s", err.Error())
+		}
+
+		return nil
+	}, nil
+}
+
+func fmtFormatFile(file string, io commands.IO) []byte {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, file, nil, parser.AllErrors|parser.ParseComments)
+	if err != nil {
+		fmtPrintScannerError(err, io)
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := format.Node(&buf, fset, node); err != nil {
+		io.ErrPrintfln("format error: %s", err.Error())
+		return nil
+	}
+
+	return buf.Bytes()
+}
+
+func fmtProcessStdin(cfg *fmtCfg, cio commands.IO) error {
+	stdin := cio.In()
+
+	file, err := io.ReadAll(stdin)
+	if err != nil {
+		return fmt.Errorf("unable to read stdin: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if cfg.imports {
+		p, err := fmtNewFSProcessor(cfg, cio)
+		if err != nil {
+			return err
+		}
+
+		data, err := p.FormatImportFromSource("main.gno", file)
+		if err != nil {
+			fmtPrintScannerError(err, cio)
+			return commands.ExitCodeError(1)
+		}
+
+		if _, err := buf.Write(data); err != nil {
+			panic("write to buffer error: " + err.Error())
+		}
+	} else {
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, "main.gno", file, parser.AllErrors|parser.ParseComments)
+		if err != nil {
+			fmtPrintScannerError(err, cio)
+			return commands.ExitCodeError(1)
+		}
+
+		if err := format.Node(&buf, fset, node); err != nil {
+			return fmt.Errorf("format error: %s", err.Error())
+		}
+	}
+
+	if cfg.diff {
+		d := diff.Diff("stdin", file, "stdin.formatted", buf.Bytes())
+		if d != nil {
+			cio.ErrPrintln(string(d))
+			return commands.ExitCodeError(1)
+		}
+	} else {
+		cio.Printf(buf.String())
+	}
+
+	return nil
+}
+
+func fmtPrintScannerError(err error, io commands.IO) bool {
+	// Get underlying parse error
+	for ; err != nil; err = errors.Unwrap(err) {
+		if scanErrors, ok := err.(scanner.ErrorList); ok {
+			for _, e := range scanErrors {
+				io.ErrPrintln(e)
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func fmtNewFSProcessor(cfg *fmtCfg, io commands.IO) (*gnofmt.Processor, error) {
 	r := gnofmt.NewFSResolver()
 
 	gnoroot := gnoenv.RootDir()
@@ -232,51 +341,7 @@ func fmtFormatFileImports(cfg *fmtCfg, io commands.IO) (fmtProcessFileFunc, erro
 		return nil, fmt.Errorf("unable to load %q: %w", examples, err)
 	}
 
-	p := gnofmt.NewProcessor(r)
-	return func(file string, io commands.IO) []byte {
-		data, err := p.FormatFile(file)
-		if err == nil {
-			return data
-		}
-
-		if !fmtPrintScannerError(err, io) {
-			io.ErrPrintfln("format error: %s", err.Error())
-		}
-
-		return nil
-	}, nil
-}
-
-func fmtFormatFile(file string, io commands.IO) []byte {
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, file, nil, parser.AllErrors|parser.ParseComments)
-	if err != nil {
-		fmtPrintScannerError(err, io)
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := format.Node(&buf, fset, node); err != nil {
-		io.ErrPrintfln("format error: %s", err.Error())
-		return nil
-	}
-
-	return buf.Bytes()
-}
-
-func fmtPrintScannerError(err error, io commands.IO) bool {
-	// Get underlying parse error
-	for ; err != nil; err = errors.Unwrap(err) {
-		if scanErrors, ok := err.(scanner.ErrorList); ok {
-			for _, e := range scanErrors {
-				io.ErrPrintln(e)
-			}
-
-			return true
-		}
-	}
-
-	return false
+	return gnofmt.NewProcessor(r), nil
 }
 
 type fmtIncludes []string
