@@ -21,19 +21,21 @@ func main() {
 		name = name[:width-3] + "..."
 	}
 
-	fg := colorFromString(name, 0.5, 0.6, 90)
-	leftBorder := lipgloss.NewStyle().Foreground(fg).
+	colorLeft := colorFromString(name, 0.5, 0.6, 90)
+	colorRight := colorFromString(name, 1.0, 0.92, 90)
+	borderStyle := lipgloss.NewStyle().Foreground(colorLeft).
 		Border(lipgloss.ThickBorder(), false, true, false, false).
-		BorderForeground(fg).
+		BorderForeground(colorLeft).
 		Bold(true).
 		Width(width)
+	lineStyle := lipgloss.NewStyle().Foreground(colorRight)
 
 	w, r := os.Stdout, os.Stdin
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Fprint(w, leftBorder.Render(name)+" ")
-		fmt.Fprintln(w, line)
+		fmt.Fprint(w, borderStyle.Render(name)+" ")
+		fmt.Fprintln(w, lineStyle.Render(line))
 	}
 }

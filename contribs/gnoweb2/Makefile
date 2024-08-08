@@ -51,12 +51,13 @@ dev.templ:
 		2>&1 | $(run_logname) templ
 
 # Go server in development mode
-dev.server:
+dev.server: | .cache
 	$(run_air) \
 		--build.cmd "go build -o .cache/serve" --build.bin ".cache/serve" \
 		--build.delay "100" \
 		--build.exclude_dir "gotools,node_modules" \
 		--build.include_ext "go"  --build.stop_on_error "false" \
+		--color.app "#00FF00" \
 		--misc.clean_on_exit true \
 		2>&1 | $(run_logname) gnoweb
 
@@ -72,3 +73,5 @@ deps:
 ## Dependency install
 package-lock.json node_modules: package.json
 	npm install && touch $@
+
+.cache:; mkdir -p $@
