@@ -53,9 +53,10 @@ dev.templ:
 # Go server in development mode
 dev.server: | .cache
 	$(run_air) \
-		--build.cmd "go build -o .cache/serve" --build.bin ".cache/serve" \
+		--build.cmd "go build -o .cache/serve ./cmd/gnoweb" --build.bin ".cache/serve" \
 		--build.delay "100" \
 		--build.exclude_dir "gotools,node_modules" \
+		--build.exclude_regex "^.#" \
 		--build.include_ext "go"  --build.stop_on_error "false" \
 		--color.app "#00FF00" \
 		--misc.clean_on_exit true \

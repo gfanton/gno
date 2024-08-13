@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gnolang/gno/contribs/gnoweb/components"
+	"github.com/gnolang/gno/contribs/gnoweb2/components"
 	"github.com/gnolang/gno/gno.land/pkg/gnoclient"
 )
 

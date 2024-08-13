@@ -25,6 +25,9 @@ func NewSpecialBlockParser() parser.BlockParser {
 	return &specialBlockParser{}
 }
 
+// Trigger returns a list of characters that triggers Parse method of
+// this parser.
+// If Trigger returns a nil, Open will be called with any lines.
 func (*specialBlockParser) Trigger() []byte {
 	return []byte{'<'}
 }
@@ -40,8 +43,6 @@ func (*specialBlockParser) Trigger() []byte {
 // should returns a new Block node and returns HasChildren or NoChildren.
 func (*specialBlockParser) Open(parent ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
 	var htmlNode *HTMLBlock
-
-	r, err := html.Parse(nil)
 
 	var buf bytes.Buffer
 	line, segment := reader.PeekLine()
