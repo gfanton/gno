@@ -2,6 +2,7 @@ package dev
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gnolang/gno/contribs/gnodev/pkg/events"
@@ -9,6 +10,8 @@ import (
 	bft "github.com/gnolang/gno/tm2/pkg/bft/types"
 	"github.com/gnolang/gno/tm2/pkg/std"
 )
+
+var ErrEmptyState = errors.New("empty state")
 
 // Save the current state as initialState
 func (n *Node) SaveCurrentState(ctx context.Context) error {
@@ -26,17 +29,17 @@ func (n *Node) SaveCurrentState(ctx context.Context) error {
 }
 
 // Export the current state as list of txs
-func (n *Node) ExportCurrentState(ctx context.Context) ([]std.Tx, int, error) {
+func (n *Node) ExportCurrentState(ctx context.Context) ([]std.Tx, error) {
 	n.muNode.RLock()
 	defer n.muNode.RUnlock()
 
 	// Get current blockstore state
 	state, err := n.getState(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("unable to save state: %s", err.Error())
+		return nil, fmt.Errorf("unable to save state: %s", err.Error())
 	}
 
-	return state[:], n.currentStateIndex, nil
+	return state[:n.currentStateIndex], nil
 }
 
 func (n *Node) getState(ctx context.Context) ([]std.Tx, error) {
@@ -51,30 +54,15 @@ func (n *Node) getState(ctx context.Context) ([]std.Tx, error) {
 	return n.state, nil
 }
 
-// MoveTo changes the current position of the node to a specified index.
-// The index is expected to fall within the node's state boundary
-// which ranges from 0 to the total number of states.
-// If the move is successful, the node is reloaded.
-func (n *Node) MoveTo(ctx context.Context, index int) error {
-	n.muNode.Lock()
-	defer n.muNode.Unlock()
-
-	return n.moveTo(ctx, index)
-}
-
-// MoveFrom adjusts the current state of the node by `x` transactions.
+// MoveBy adjusts the current state of the node by `x` transactions.
 // `x` can be negative to move backward or positive to move forward, however, index boundaries are respected
 // with a lower limit of 0 and upper limit equaling the total number of states.
-// If a move is successful, node is reload.
-func (n *Node) MoveFrom(ctx context.Context, x int) error {
+// If a move is successful, node is reloaded.
+func (n *Node) MoveBy(ctx context.Context, x int) error {
 	n.muNode.Lock()
 	defer n.muNode.Unlock()
 
-	index := n.currentStateIndex + x
-	return n.moveTo(ctx, index)
-}
-
-func (n *Node) moveTo(ctx context.Context, newIndex int) error {
+	newIndex := n.currentStateIndex + x
 	state, err := n.getState(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to get current state: %w", err)
@@ -83,7 +71,7 @@ func (n *Node) moveTo(ctx context.Context, newIndex int) error {
 	maxState := len(state)
 	switch {
 	case maxState == 0: // no state
-		return fmt.Errorf("empty state")
+		return ErrEmptyState
 	case newIndex < 0:
 		newIndex = 0
 		n.logger.Info("minimum state reached", "tx-index", fmt.Sprintf("%d/%d", newIndex, maxState))
@@ -111,8 +99,7 @@ func (n *Node) moveTo(ctx context.Context, newIndex int) error {
 	}
 
 	// Reset the node with the new genesis state.
-	err = n.rebuildNode(ctx, genesis)
-	if err != nil {
+	if err = n.rebuildNode(ctx, genesis); err != nil {
 		return fmt.Errorf("uanble to rebuild node: %w", err)
 	}
 
@@ -126,11 +113,11 @@ func (n *Node) moveTo(ctx context.Context, newIndex int) error {
 }
 
 func (n *Node) MoveToPreviousTX(ctx context.Context) error {
-	return n.MoveFrom(ctx, -1)
+	return n.MoveBy(ctx, -1)
 }
 
 func (n *Node) MoveToNextTX(ctx context.Context) error {
-	return n.MoveFrom(ctx, 1)
+	return n.MoveBy(ctx, 1)
 }
 
 // Export the current state as genesis doc

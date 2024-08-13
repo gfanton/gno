@@ -57,7 +57,7 @@ func DefaultNodeConfig(rootdir string) *NodeConfig {
 	}
 
 	return &NodeConfig{
-		Logger:                noopLogger,
+		Logger:                log.NewNoopLogger(),
 		Emitter:               &emitter.NoopServer{},
 		DefaultDeployer:       defaultDeployer,
 		BalancesList:          balances,
@@ -248,7 +248,7 @@ func (n *Node) updatePackages(paths ...string) error {
 		pkgsUpdated += len(pkgslist)
 	}
 
-	n.logger.Info(fmt.Sprintf("updated %d pacakges", pkgsUpdated))
+	n.logger.Info(fmt.Sprintf("updated %d packages", pkgsUpdated))
 	return nil
 }
 
@@ -431,7 +431,9 @@ func (n *Node) handleEventTX(evt tm2events.Event) {
 	switch data := evt.(type) {
 	case bft.EventTx:
 		go func() {
-			// Use separate routine to avoid deadlock
+			// Use a separate goroutine in order to avoid a deadlock situation.
+			// This is needed because this callback may get called during node rebuilding while
+			// lock is held.
 			n.muNode.Lock()
 			defer n.muNode.Unlock()
 
@@ -450,7 +452,7 @@ func (n *Node) handleEventTX(evt tm2events.Event) {
 		}
 
 		if err := amino.Unmarshal(data.Result.Tx, &resEvt.Tx); err != nil {
-			n.logger.Error("unable to unwarp tx result",
+			n.logger.Error("unable to unwrap tx result",
 				"error", err)
 		}
 
@@ -458,9 +460,9 @@ func (n *Node) handleEventTX(evt tm2events.Event) {
 	}
 }
 
-var noopLogger = log.NewNoopLogger()
-
 func (n *Node) rebuildNode(ctx context.Context, genesis gnoland.GnoGenesisState) (err error) {
+	noopLogger := log.NewNoopLogger()
+
 	// Stop the node if it's currently running.
 	if err := n.stopIfRunning(); err != nil {
 		return fmt.Errorf("unable to stop the node: %w", err)
@@ -547,7 +549,7 @@ func (n *Node) genesisTxHandler(ctx sdk.Context, tx std.Tx, res sdk.Result) {
 func newNodeConfig(tmc *tmcfg.Config, chainid string, appstate gnoland.GnoGenesisState) *gnoland.InMemoryNodeConfig {
 	// Create Mocked Identity
 	pv := gnoland.NewMockedPrivValidator()
-	genesis := gnoland.NewDefaultGenesisConfig(pv.GetPubKey(), chainid)
+	genesis := gnoland.NewDefaultGenesisConfig(chainid)
 	genesis.AppState = appstate
 
 	// Add self as validator

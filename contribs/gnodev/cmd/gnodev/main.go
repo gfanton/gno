@@ -30,6 +30,8 @@ const (
 	AccountsLogName    = "Accounts"
 )
 
+var ErrConflictingFileArgs = errors.New("cannot specify `balances-file` or `txs-file` along with `genesis-file`")
+
 var (
 	DefaultDeployerName    = integration.DefaultAccount_Name
 	DefaultDeployerAddress = crypto.MustAddressFromString(integration.DefaultAccount_Address)
@@ -38,7 +40,6 @@ var (
 
 type devCfg struct {
 	// Listeners
-	webListenerAddr          string
 	nodeRPCListenerAddr      string
 	nodeP2PListenerAddr      string
 	nodeProxyAppListenerAddr string
@@ -54,6 +55,10 @@ type devCfg struct {
 	genesisFile  string
 	txsFile      string
 
+	// Web Configuration
+	webListenerAddr     string
+	webRemoteHelperAddr string
+
 	// Node Configuration
 	minimal    bool
 	verbose    bool
@@ -62,6 +67,7 @@ type devCfg struct {
 	maxGas     int64
 	chainId    string
 	serverMode bool
+	unsafeAPI  bool
 }
 
 var defaultDevOptions = &devCfg{
@@ -117,7 +123,14 @@ func (c *devCfg) RegisterFlags(fs *flag.FlagSet) {
 		&c.webListenerAddr,
 		"web-listener",
 		defaultDevOptions.webListenerAddr,
-		"web server listening address",
+		"web server listener address",
+	)
+
+	fs.StringVar(
+		&c.webRemoteHelperAddr,
+		"web-help-remote",
+		defaultDevOptions.webRemoteHelperAddr,
+		"web server help page's remote addr (default to <node-rpc-listener>)",
 	)
 
 	fs.StringVar(
@@ -209,6 +222,21 @@ func (c *devCfg) RegisterFlags(fs *flag.FlagSet) {
 		defaultDevOptions.maxGas,
 		"set the maximum gas per block",
 	)
+
+	fs.BoolVar(
+		&c.unsafeAPI,
+		"unsafe-api",
+		defaultDevOptions.unsafeAPI,
+		"enable /reset and /reload endpoints which are not safe to expose publicly",
+	)
+}
+
+func (c *devCfg) validateConfigFlags() error {
+	if (c.balancesFile != "" || c.txsFile != "") && c.genesisFile != "" {
+		return ErrConflictingFileArgs
+	}
+
+	return nil
 }
 
 func (c *devCfg) validateConfigFlags() error {
@@ -275,7 +303,6 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 	// Setup Dev Node
 	// XXX: find a good way to export or display node logs
 	nodeLogger := logger.WithGroup(NodeLogName)
-
 	combinedEmitter := emitter.Combine(emitterLocal, emitterServer)
 	nodeCfg := setupDevNodeConfig(cfg, logger, combinedEmitter, balances, pkgpaths)
 	devNode, err := setupDevNode(ctx, cfg, nodeCfg)
@@ -297,6 +324,23 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 
 	// Setup gnoweb
 	webhandler := setupGnoWebServer(logger.WithGroup(WebLogName), cfg, devNode)
+
+	// Setup unsafe APIs if enabled
+	if cfg.unsafeAPI {
+		mux.HandleFunc("/reset", func(res http.ResponseWriter, req *http.Request) {
+			if err := devNode.Reset(req.Context()); err != nil {
+				logger.Error("failed to reset", slog.Any("err", err))
+				res.WriteHeader(http.StatusInternalServerError)
+			}
+		})
+
+		mux.HandleFunc("/reload", func(res http.ResponseWriter, req *http.Request) {
+			if err := devNode.Reload(req.Context()); err != nil {
+				logger.Error("failed to reload", slog.Any("err", err))
+				res.WriteHeader(http.StatusInternalServerError)
+			}
+		})
+	}
 
 	// Setup HotReload if needed
 	if !cfg.noWatch {
@@ -349,18 +393,6 @@ func execDev(cfg *devCfg, args []string, io commands.IO) (err error) {
 
 	return nil
 }
-
-// var helper string = `
-// P           Previous TX	 - Go to the previous tx
-// N           Next TX	 - Go to the next tx
-// E           Export	 - Export the current state as genesis doc
-// A           Accounts	 - Display known accounts and balances
-// H           Help	 - Display this message
-// R           Reload	 - Reload all packages to take change into account.
-// Ctrl+S      Save State	 - Save the current state
-// Ctrl+R      Reset	 - Reset application to it's initial/save state.
-// Ctrl+C      Exit	 - Exit the application
-// `
 
 func watchForUpdates(ctx context.Context, logger *slog.Logger, dnode *gnodev.Node, watch *watcher.PackageWatcher) error {
 	for {
