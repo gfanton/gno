@@ -1,3 +1,5 @@
+DEV_REMOTE ?= 127.0.0.1:8888
+
 # Variable Declarations
 COMPONENTS_FOLDER := ./components
 
@@ -57,7 +59,7 @@ dev.templ:
 # Go server in development mode
 dev.server: | .cache
 	$(run_air) \
-		--build.cmd "go build -o .cache/serve ./cmd/gnoweb" --build.bin ".cache/serve" \
+		--build.cmd "go build -o .cache/serve ./cmd/gnoweb" --build.bin ".cache/serve -remote=${DEV_REMOTE}" \
 		--build.exclude_unchanged "true" \
 		--build.exclude_dir "gotools,node_modules" \
 		--build.exclude_regex '^\.#.*' \
