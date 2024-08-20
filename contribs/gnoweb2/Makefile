@@ -1,5 +1,5 @@
 # Variable Declarations
-COMPONENTS_FOLDER := .
+COMPONENTS_FOLDER := ./components
 
 tools_run := go run -modfile ./gotools/go.mod
 tools_install := go install -modfile ./gotools/go.mod
@@ -40,9 +40,13 @@ fmt:
  ###############################
 .PHONY: dev dev.templ dev.server dev.tailwind deps
 
-# This rule run the development dependencies in parallel.
+# Run the development dependencies in parallel
 dev:
-	$(MAKE) -j 3 dev.templ dev.server dev.tailwind
+	@echo "-- starting development tools"
+	$(MAKE) -j 3 \
+		dev.templ \
+		dev.server \
+		dev.tailwind
 
 # `Templ` in development mode
 dev.templ:
@@ -54,12 +58,12 @@ dev.templ:
 dev.server: | .cache
 	$(run_air) \
 		--build.cmd "go build -o .cache/serve ./cmd/gnoweb" --build.bin ".cache/serve" \
-		--build.delay "100" \
+		--build.exclude_unchanged "true" \
 		--build.exclude_dir "gotools,node_modules" \
-		--build.exclude_regex "^.#" \
-		--build.include_ext "go"  --build.stop_on_error "false" \
-		--color.app "#00FF00" \
-		--misc.clean_on_exit true \
+		--build.exclude_regex '^\.#.*' \
+		--build.include_ext "go"
+		--build.stop_on_error "false" \
+		--build.rerun_delay "1000"
 		2>&1 | $(run_logname) gnoweb
 
 # Tailwind CSS in development mode

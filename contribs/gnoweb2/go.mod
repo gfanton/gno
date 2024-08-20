@@ -5,7 +5,7 @@ go 1.22
 replace github.com/gnolang/gno => ../../
 
 require (
-	github.com/a-h/templ v0.2.707
+	github.com/a-h/templ v0.2.747
 	github.com/gnolang/gno v0.0.0-00010101000000-000000000000
 	github.com/yuin/goldmark v1.7.2
 	go.uber.org/zap v1.27.0

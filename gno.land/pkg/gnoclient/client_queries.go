@@ -91,7 +91,6 @@ func (c *Client) Render(pkgPath string, args string) (string, *ctypes.ResultABCI
 
 	path := "vm/qrender"
 	data := []byte(fmt.Sprintf("%s:%s", pkgPath, args))
-
 	qres, err := c.RPCClient.ABCIQuery(path, data)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "query render")

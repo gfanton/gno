@@ -1,0 +1,50 @@
+package components
+
+import (
+	"fmt"
+	"time"
+)
+
+type PageMetadata struct {
+	Title string
+}
+
+templ headerTemplate() {
+	<header data-testid="headerTemplate">
+		<h1>Gno Land Preview</h1>
+	</header>
+}
+
+templ footerTemplate() {
+	<footer data-testid="footerTemplate">
+		<div>&copy; { fmt.Sprintf("%d", time.Now().Year()) }</div>
+	</footer>
+}
+
+templ navTemplate() {
+	<nav data-testid="navTemplate">
+		<ul>
+			<li><a href="/">Home</a></li>
+			<li><a href="/posts">Posts</a></li>
+		</ul>
+	</nav>
+}
+
+var assetsHandle = templ.NewOnceHandle()
+
+templ IndexView(meta PageMetadata, render templ.Component) {
+	<html>
+		<head>
+			<title>{ meta.Title }</title>
+						@assetsHandle.Once() {
+										<link rel="stylesheet" href="/assets/style.css"/>
+						}
+		</head>
+		<body>
+			@headerTemplate()
+			@navTemplate()
+			@RealmView(render)
+		</body>
+		// @footerTemplate()
+	</html>
+}

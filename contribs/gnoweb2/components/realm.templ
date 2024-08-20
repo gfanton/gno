@@ -1,0 +1,15 @@
+package components
+
+templ loadingRealm(name string) {
+	<div>
+		Loading
+	</div>
+}
+
+templ RealmView(render templ.Component) {
+	<div>
+		// @templ.Flush() {
+					@render
+		// }
+	</div>
+}

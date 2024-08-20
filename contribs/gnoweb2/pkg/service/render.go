@@ -1,72 +1,61 @@
-package gnoweb
+package service
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"path/filepath"
 	"strings"
 
 	"github.com/gnolang/gno/gno.land/pkg/gnoclient"
-	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/yuin/goldmark"
 )
 
-type ServiceRender interface {
+type Render interface {
 	// Show the content of the give filename for the given realm path
-	SourceFile(path, file string) ([]byte, error)
+	SourceFile(path, filename string) ([]byte, error)
 	// Return list of files of the given realm path
 	Sources(path string) ([]string, error)
 	// Render the realm
-	Realm(path string, arg string) ([]byte, error)
+	Render(w io.Writer, path string, arg string) error
 }
 
-type Config struct {
-	// GoldMark renderer
-	Markdown goldmark.Markdown
-	Logger   *slog.Logger
-}
+var _ Render = (*WebRender)(nil)
 
-func NewDefaultConfig() Config {
-	return Config{
-		Markdown: goldmark.New(),
-		Logger:   log.NewNoopLogger(),
-	}
-}
-
-type WebServiceRender struct {
+type WebRender struct {
 	log    *slog.Logger
 	client *gnoclient.Client
 	md     goldmark.Markdown
 }
 
-func NewService(cfg Config) *WebServiceRender {
-	return &WebServiceRender{
-		log: cfg.Logger,
-		md:  cfg.Markdown,
+func NewWebRender(log *slog.Logger, cl *gnoclient.Client, md goldmark.Markdown) *WebRender {
+	return &WebRender{
+		log:    log,
+		client: cl,
+		md:     md,
 	}
 }
 
-func (s *WebServiceRender) File(path, filename string) ([]string, error) {
+func (s *WebRender) SourceFile(path, filename string) ([]byte, error) {
 	const qpath = "vm/qfile"
 
+	filename = strings.TrimSpace(filename) // sanitize filename
 	if filename == "" {
 		return nil, errors.New("empty filename given") // XXX -> ErrXXX
 	}
 
-	// XXX: move this into gnoclient
+	// XXX: move this into gnoclient ?
 	path = filepath.Join(path, filename)
 	res, err := s.query(qpath, []byte(path))
 	if err != nil {
 		return nil, err
 	}
 
-	files := strings.Split(string(res), "\n")
-	return files, nil
+	return res, nil
 }
 
-func (s *WebServiceRender) Sources(path string) ([]string, error) {
+func (s *WebRender) Sources(path string) ([]string, error) {
 	const qpath = "vm/qfile"
 
 	// XXX: move this into gnoclient
@@ -79,33 +68,30 @@ func (s *WebServiceRender) Sources(path string) ([]string, error) {
 	return files, nil
 }
 
-func (s *WebServiceRender) RenderRealm(qpath string, args string) ([]byte, error) {
+func (s *WebRender) Render(w io.Writer, pkgPath string, args string) error {
 	const path = "vm/qrender"
 
-	data := []byte(qpath + ":" + args)
+	pkgPath = strings.Trim(pkgPath, "/")
+	data := []byte(fmt.Sprintf("gno.land/%s:%s", pkgPath, args))
 	rawres, err := s.query(path, data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// XXX: use sync pool to save some allocs
-	var buff bytes.Buffer
-	if err := s.md.Convert(rawres, &buff); err != nil {
-		return nil, fmt.Errorf("unable render realm: %q", err)
+	if err := s.md.Convert(rawres, w); err != nil {
+		return fmt.Errorf("unable render realm: %q", err)
 	}
 
-	return buff.Bytes(), nil
+	return nil
 }
 
-func (s *WebServiceRender) query(qpath string, data []byte) ([]byte, error) {
+func (s *WebRender) query(qpath string, data []byte) ([]byte, error) {
+	s.log.Info("query", "qpath", qpath, "data", string(data))
 	// XXX: move this into gnoclient
 	qres, err := s.client.Query(gnoclient.QueryCfg{
 		Path: qpath,
 		Data: data,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to query")
-	}
 
 	if err != nil {
 		s.log.Error("request error", "path", qpath, "error", err)
