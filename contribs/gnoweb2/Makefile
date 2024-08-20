@@ -61,9 +61,9 @@ dev.server: | .cache
 		--build.exclude_unchanged "true" \
 		--build.exclude_dir "gotools,node_modules" \
 		--build.exclude_regex '^\.#.*' \
-		--build.include_ext "go"
+		--build.include_ext "go" \
 		--build.stop_on_error "false" \
-		--build.rerun_delay "1000"
+		--build.rerun_delay "1000" \
 		2>&1 | $(run_logname) gnoweb
 
 # Tailwind CSS in development mode

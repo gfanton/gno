@@ -8,8 +8,8 @@ templ loadingRealm(name string) {
 
 templ RealmView(render templ.Component) {
 	<div>
-		// @templ.Flush() {
-					@render
-		// }
+		@templ.Flush() {
+			@render
+		}
 	</div>
 }

@@ -73,13 +73,13 @@ func execWeb(cfg *webCfg, args []string, io commands.IO) (err error) {
 	md := goldmark.New()
 
 	staticMeta := gnoweb.StaticMetadata{
-		Assetspath: "/assets",
+		AssetsPath: "/assets/",
 	}
 
 	mux := http.NewServeMux()
 
 	// Setup asset handler
-	mux.Handle(staticMeta.Assetspath, gnoweb.AssetHandler())
+	mux.Handle(staticMeta.AssetsPath, gnoweb.AssetHandler())
 
 	client, err := client.NewHTTPClient(cfg.remote)
 	if err != nil {
@@ -96,21 +96,21 @@ func execWeb(cfg *webCfg, args []string, io commands.IO) (err error) {
 		return fmt.Errorf("unable to create signer: %w", err)
 	}
 
-	// Setup Realm Handler
 	// Setup webservice
 	cl := gnoclient.Client{
 		Signer:    signer,
 		RPCClient: client,
 	}
-
 	render := service.NewWebRender(logger, &cl, md)
+
+	// Setup main handler
 	webhandler := gnoweb.NewWebHandler(
 		ctx, // XXX
 		logger,
 		render,
 		&staticMeta,
 	)
-	mux.Handle("/r/", webhandler)
+	mux.Handle("/", webhandler)
 
 	bindaddr, err := net.ResolveTCPAddr("tcp", cfg.listener)
 	if err != nil {

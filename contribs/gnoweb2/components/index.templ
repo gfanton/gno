@@ -36,15 +36,17 @@ templ IndexView(meta PageMetadata, render templ.Component) {
 	<html>
 		<head>
 			<title>{ meta.Title }</title>
-						@assetsHandle.Once() {
-										<link rel="stylesheet" href="/assets/style.css"/>
-						}
+			@assetsHandle.Once() {
+				<link rel="stylesheet" href="/assets/styles.css"/>
+			}
 		</head>
 		<body>
 			@headerTemplate()
 			@navTemplate()
-			@RealmView(render)
+			if render != nil {
+				@RealmView(render)
+			}
 		</body>
-		// @footerTemplate()
+		@footerTemplate()
 	</html>
 }

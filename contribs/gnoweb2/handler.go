@@ -2,7 +2,6 @@ package gnoweb
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 )
 
 type StaticMetadata struct {
-	Assetspath string
+	AssetsPath string
 }
 
 type WebHandler struct {
@@ -50,23 +49,19 @@ var reRealmName = regexp.MustCompile(`(?mU)(/r/[a-z][a-z0-9_]*(?:/[a-z][a-z0-9_]
 
 func (h *WebHandler) Get(w http.ResponseWriter, r *http.Request) {
 	matchs := reRealmName.FindStringSubmatch(r.URL.Path)
-	if len(matchs) != 3 {
-		err := fmt.Errorf("invalid realm path: %q", r.URL.Path)
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+
+	var realm templ.Component
+	if len(matchs) > 0 {
+		path, args := matchs[1], matchs[2]
+		realm = templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+			if err := h.render.Render(w, path, args); err != nil {
+				h.logger.Error("unable to render", "err", err)
+				components.NotFoundComponent("realm not found").Render(h.ctx, w)
+			}
+
+			return nil
+		})
 	}
-
-	path, args := matchs[1], matchs[2]
-
-	// Wrap rendred buffer into a component
-	realm := templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		if err := h.render.Render(w, path, args); err != nil {
-			h.logger.Error("unable to render", "err", err)
-			components.NotFoundComponent().Render(h.ctx, w)
-		}
-
-		return nil
-	})
 
 	var metadata components.PageMetadata
 	metadata.Title = "MyRealm"

@@ -6,6 +6,6 @@ templ timeComponent(d time.Time) {
 	<div>{ d.String() }</div>
 }
 
-templ NotFoundComponent() {
-	<div>404 - Not found</div>
+templ NotFoundComponent(message string) {
+	<div>404 - { message }</div>
 }

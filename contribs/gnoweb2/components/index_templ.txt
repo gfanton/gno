@@ -4,6 +4,7 @@
 <nav data-testid=\"navTemplate\"><ul><li><a href=\"/\">Home</a></li><li><a href=\"/posts\">Posts</a></li></ul></nav>
 <html><head><title>
 </title>
-<link rel=\"stylesheet\" href=\"/assets/style.css\">
+<link rel=\"stylesheet\" href=\"/assets/styles.css\">
 </head><body>
-</body></html>
+</body>
+</html>
