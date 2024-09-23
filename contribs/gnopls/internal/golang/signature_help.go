@@ -13,13 +13,13 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/typesutil"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/typesutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
 )
 
 // SignatureHelp returns information about the signature of the innermost

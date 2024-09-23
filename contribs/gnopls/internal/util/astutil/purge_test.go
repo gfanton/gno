@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/astutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 )
 
 // TestPurgeFuncBodies tests PurgeFuncBodies by comparing it against a

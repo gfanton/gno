@@ -14,12 +14,12 @@ import (
 	"go/token"
 	"reflect"
 
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/astutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/safetoken"
+	"github.com/gnolang/gno/contribs/gnopls/internal/diff"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
 )
 
 // Common parse modes; these should be reused wherever possible to increase

@@ -13,12 +13,12 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/fuzzy"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/fuzzy"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
 )
 
 // maxSymbols defines the maximum number of symbol results that should ever be

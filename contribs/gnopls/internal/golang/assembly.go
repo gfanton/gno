@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/internal/gocommand"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
 )
 
 // AssemblyHTML returns an HTML document containing an assembly listing of the selected function.

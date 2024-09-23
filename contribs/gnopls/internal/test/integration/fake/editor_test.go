@@ -8,7 +8,7 @@ import (
 	"context"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 const exampleProgram = `

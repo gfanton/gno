@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/semtok"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/semtok"
 )
 
 // line number (1-based) and message

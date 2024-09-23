@@ -16,10 +16,10 @@ import (
 	"strings"
 	"sync"
 
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 // NewTracker returns a new Tracker that reports progress to the

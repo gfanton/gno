@@ -15,16 +15,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/parsego"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/safetoken"
 	"golang.org/x/mod/modfile"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/event"
 	"mvdan.cc/xurls/v2"
 )
 
@@ -41,7 +41,7 @@ func (s *server) DocumentLink(ctx context.Context, params *protocol.DocumentLink
 	switch snapshot.FileKind(fh) {
 	case file.Mod:
 		links, err = modLinks(ctx, snapshot, fh)
-	case file.Go:
+	case file.Gno:
 		links, err = goLinks(ctx, snapshot, fh)
 	}
 	// Don't return errors for document links.

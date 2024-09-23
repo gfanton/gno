@@ -18,11 +18,11 @@ import (
 
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/telemetry/counter/countertest" // requires go1.21+
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/telemetry"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {
@@ -82,10 +82,10 @@ func TestTelemetry(t *testing.T) {
 		// This will increment a counter named something like:
 		//
 		// `gopls/bug
-		// golang.org/x/tools/gopls/internal/util/bug.report:+35
-		// golang.org/x/tools/gopls/internal/util/bug.Report:=68
-		// golang.org/x/tools/gopls/internal/telemetry_test.TestTelemetry.func2:+4
-		// golang.org/x/tools/gopls/internal/test/integration.(*Runner).Run.func1:+87
+		// github.com/gnolang/gno/contribs/gnopls/internal/util/bug.report:+35
+		// github.com/gnolang/gno/contribs/gnopls/internal/util/bug.Report:=68
+		// github.com/gnolang/gno/contribs/gnopls/internal/telemetry_test.TestTelemetry.func2:+4
+		// github.com/gnolang/gno/contribs/gnopls/internal/test/integration.(*Runner).Run.func1:+87
 		// testing.tRunner:+150
 		// runtime.goexit:+0`
 		//

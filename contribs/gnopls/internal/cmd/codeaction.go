@@ -12,8 +12,8 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/tool"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 )
 
 // codeaction implements the codeaction verb for gopls.

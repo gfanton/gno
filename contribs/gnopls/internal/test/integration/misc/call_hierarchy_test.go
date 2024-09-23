@@ -7,8 +7,8 @@ package misc
 import (
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 // Test for golang/go#49125

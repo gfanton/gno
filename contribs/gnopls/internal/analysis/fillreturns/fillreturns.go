@@ -16,8 +16,8 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/fuzzy"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/fuzzy"
+	"github.com/gnolang/gno/contribs/gnopls/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -28,7 +28,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "fillreturns"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/fillreturns",
+	URL:              "https://pkg.go.dev/github.com/gnolang/gno/contribs/gnopls/internal/analysis/fillreturns",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

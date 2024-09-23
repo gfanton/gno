@@ -13,8 +13,8 @@ import (
 	"os"
 	"unicode/utf8"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
 )
 
 // generate semantic tokens and interpolate them in the file

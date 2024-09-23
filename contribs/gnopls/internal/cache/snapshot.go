@@ -25,33 +25,33 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/methodsets"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/parsego"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/testfuncs"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/typerefs"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/xrefs"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/filecache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
+	label1 "github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/memoize"
+	"github.com/gnolang/gno/contribs/gnopls/internal/packagesinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/typesinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/constraints"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/immutable"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/pathutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/persistent"
+	"github.com/gnolang/gno/contribs/gnopls/internal/vulncheck"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/methodsets"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/cache/testfuncs"
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/cache/xrefs"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/filecache"
-	label1 "golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/constraints"
-	"golang.org/x/tools/gopls/internal/util/immutable"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/gopls/internal/util/persistent"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/label"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/memoize"
-	"golang.org/x/tools/internal/packagesinternal"
-	"golang.org/x/tools/internal/typesinternal"
 )
 
 // A Snapshot represents the current state for a given view.
@@ -310,7 +310,7 @@ func (s *Snapshot) FileKind(fh file.Handle) file.Kind {
 	// TODO(rfindley): this doesn't look right. We should default to UnknownKind.
 	// Also, I don't understand the comment above, though I'd guess before go1.15
 	// we encountered cgo files without the .go extension.
-	return file.Go
+	return file.Gno
 }
 
 // fileKind returns the default file kind for a file, before considering
@@ -327,8 +327,8 @@ func fileKind(fh file.Handle) file.Kind {
 
 	fext := filepath.Ext(fh.URI().Path())
 	switch fext {
-	case ".go":
-		return file.Go
+	case ".gno":
+		return file.Gno
 	case ".mod":
 		return file.Mod
 	case ".sum":
@@ -1387,7 +1387,7 @@ func (s *Snapshot) orphanedFileDiagnostics(ctx context.Context, overlays []*over
 searchOverlays:
 	for _, o := range overlays {
 		uri := o.URI()
-		if s.IsBuiltin(uri) || s.FileKind(o) != file.Go {
+		if s.IsBuiltin(uri) || s.FileKind(o) != file.Gno {
 			continue
 		}
 		mps, err := s.MetadataForFile(ctx, uri)

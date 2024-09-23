@@ -18,20 +18,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/persistent"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/keys"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/memoize"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/typerefs"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event/keys"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
+	"github.com/gnolang/gno/contribs/gnopls/internal/imports"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/memoize"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/persistent"
+	"github.com/gnolang/gno/contribs/gnopls/internal/vulncheck"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 // NewSession creates a new gopls session with the given cache.
@@ -690,7 +690,7 @@ func matchingView[V viewDefiner](fh file.Handle, relevantViews []V) V {
 	// Port matching doesn't apply to non-go files, or files that no longer exist.
 	// Note that the behavior here on non-existent files shouldn't matter much,
 	// since there will be a subsequent failure.
-	if fileKind(fh) != file.Go || err != nil {
+	if fileKind(fh) != file.Gno || err != nil {
 		return relevantViews[0]
 	}
 
@@ -805,7 +805,7 @@ func (s *Session) DidModifyFiles(ctx context.Context, modifications []file.Modif
 		// pay this cost when e.g. processing a bunch of on-disk changes due to a
 		// branch change. Be careful to only do this if both files are open Go
 		// files.
-		if old, ok := replaced[c.URI]; ok && !checkViews && fileKind(fh) == file.Go {
+		if old, ok := replaced[c.URI]; ok && !checkViews && fileKind(fh) == file.Gno {
 			if new, ok := fh.(*overlay); ok {
 				if buildComment(old.content) != buildComment(new.content) {
 					checkViews = true

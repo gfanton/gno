@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 func TestStartDebugging(t *testing.T) {

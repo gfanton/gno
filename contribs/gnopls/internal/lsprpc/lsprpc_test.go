@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/debug"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/debug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/integration/fake"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2/servertest"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 )
 
 type FakeClient struct {

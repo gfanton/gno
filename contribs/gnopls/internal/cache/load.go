@@ -17,17 +17,17 @@ import (
 	"time"
 
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/immutable"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/packagesinternal"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/immutable"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/pathutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
+	"github.com/gnolang/gno/contribs/gnopls/internal/packagesinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 var loadID uint64 // atomic identifier for loads
@@ -75,7 +75,7 @@ func (s *Snapshot) load(ctx context.Context, allowNetwork bool, scopes ...loadSc
 				panic(fmt.Sprintf("internal error: load called with multiple scopes when a file scope is present (file: %s)", uri))
 			}
 			fh := s.FindFile(uri)
-			if fh == nil || s.FileKind(fh) != file.Go {
+			if fh == nil || s.FileKind(fh) != file.Gno {
 				// Don't try to load a file that doesn't exist, or isn't a go file.
 				continue
 			}

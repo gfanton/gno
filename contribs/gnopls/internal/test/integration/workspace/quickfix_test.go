@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/test/compare"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/compare"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 func TestQuickFix_UseModule(t *testing.T) {

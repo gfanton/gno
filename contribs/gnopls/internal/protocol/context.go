@@ -9,11 +9,11 @@ import (
 	"context"
 	"sync"
 
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/core"
-	"golang.org/x/tools/internal/event/export"
-	"golang.org/x/tools/internal/event/label"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event/core"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event/export"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 type contextKey int

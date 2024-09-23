@@ -5,4 +5,4 @@ Usage:
 
 The api-json command prints a JSON value that describes
 and documents all gopls' public interfaces.
-Its schema is defined by golang.org/x/tools/gopls/internal/doc.API.
+Its schema is defined by github.com/gnolang/gno/contribs/gnopls/internal/doc.API.

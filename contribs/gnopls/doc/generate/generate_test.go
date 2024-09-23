@@ -7,7 +7,7 @@ package main
 import (
 	"testing"
 
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 )
 
 func TestGenerated(t *testing.T) {

@@ -10,12 +10,12 @@ import (
 	"go/types"
 
 	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/safetoken"
+	"github.com/gnolang/gno/contribs/gnopls/internal/aliases"
+	"github.com/gnolang/gno/contribs/gnopls/internal/diff"
+	"github.com/gnolang/gno/contribs/gnopls/internal/typeparams"
 )
 
 // exprAtPos returns the index of the expression containing pos.

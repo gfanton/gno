@@ -7,7 +7,7 @@ package file
 import (
 	"fmt"
 
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 // Kind describes the kind of the file in question.
@@ -18,8 +18,8 @@ const (
 	// UnknownKind is a file type we don't know about.
 	UnknownKind = Kind(iota)
 
-	// Go is a Go source file.
-	Go
+	// Gno is a Gno source file.
+	Gno
 	// Mod is a go.mod file.
 	Mod
 	// Sum is a go.sum file.
@@ -32,16 +32,16 @@ const (
 
 func (k Kind) String() string {
 	switch k {
-	case Go:
-		return "go"
+	case Gno:
+		return "gno"
 	case Mod:
-		return "go.mod"
+		return "gno.mod"
 	case Sum:
-		return "go.sum"
+		return "gno.sum"
 	case Tmpl:
 		return "tmpl"
 	case Work:
-		return "go.work"
+		return "gno.work"
 	default:
 		return fmt.Sprintf("internal error: unknown file kind %d", k)
 	}
@@ -52,11 +52,11 @@ func (k Kind) String() string {
 // or UnknownKind if the language is not one recognized by gopls.
 func KindForLang(langID protocol.LanguageKind) Kind {
 	switch langID {
-	case "go":
-		return Go
-	case "go.mod":
+	case "gno":
+		return Gno
+	case "gno.mod":
 		return Mod
-	case "go.sum":
+	case "gno.sum":
 		return Sum
 	case "tmpl", "gotmpl":
 		return Tmpl

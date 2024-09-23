@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 func (s *server) Rename(ctx context.Context, params *protocol.RenameParams) (*protocol.WorkspaceEdit, error) {
@@ -26,7 +26,7 @@ func (s *server) Rename(ctx context.Context, params *protocol.RenameParams) (*pr
 	}
 	defer release()
 
-	if kind := snapshot.FileKind(fh); kind != file.Go {
+	if kind := snapshot.FileKind(fh); kind != file.Gno {
 		return nil, fmt.Errorf("cannot rename in file of type %s", kind)
 	}
 
@@ -77,7 +77,7 @@ func (s *server) PrepareRename(ctx context.Context, params *protocol.PrepareRena
 	}
 	defer release()
 
-	if kind := snapshot.FileKind(fh); kind != file.Go {
+	if kind := snapshot.FileKind(fh); kind != file.Gno {
 		return nil, fmt.Errorf("cannot rename in file of type %s", kind)
 	}
 

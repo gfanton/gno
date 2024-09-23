@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/telemetry"
 )
 
 func (s *server) Implementation(ctx context.Context, params *protocol.ImplementationParams) (_ []protocol.Location, rerr error) {
@@ -29,7 +29,7 @@ func (s *server) Implementation(ctx context.Context, params *protocol.Implementa
 		return nil, err
 	}
 	defer release()
-	if snapshot.FileKind(fh) != file.Go {
+	if snapshot.FileKind(fh) != file.Gno {
 		return nil, nil // empty result
 	}
 	return golang.Implementation(ctx, snapshot, fh, params.Position)

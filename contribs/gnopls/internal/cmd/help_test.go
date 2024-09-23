@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/tool"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cmd"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 )
 
 var updateHelpFiles = flag.Bool("update-help-files", false, "Write out the help files instead of checking them")

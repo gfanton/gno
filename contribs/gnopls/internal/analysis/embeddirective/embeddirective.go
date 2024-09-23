@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/aliases"
+	"github.com/gnolang/gno/contribs/gnopls/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -24,7 +24,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "embed"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/embeddirective",
+	URL:              "https://pkg.go.dev/github.com/gnolang/gno/contribs/gnopls/internal/analysis/embeddirective",
 }
 
 const FixCategory = "addembedimport" // recognized by gopls ApplyFix

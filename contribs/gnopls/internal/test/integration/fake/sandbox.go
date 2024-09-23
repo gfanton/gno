@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/robustio"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
+	"github.com/gnolang/gno/contribs/gnopls/internal/robustio"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 	"golang.org/x/tools/txtar"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 func TestIssue44866(t *testing.T) {

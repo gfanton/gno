@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol/command/gen"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command/gen"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 )
 
 // TestGenerated ensures that we haven't forgotten to update command_gen.go.

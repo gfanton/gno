@@ -7,7 +7,7 @@ package workspace
 import (
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 // TODO(rfindley): update the marker tests to support the concept of multiple

@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"golang.org/x/mod/modfile"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 func InlayHint(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, _ protocol.Range) ([]protocol.InlayHint, error) {

@@ -9,16 +9,16 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/golang/completion"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/gopls/internal/work"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang/completion"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/telemetry"
+	"github.com/gnolang/gno/contribs/gnopls/internal/template"
+	"github.com/gnolang/gno/contribs/gnopls/internal/work"
 )
 
 func (s *server) Completion(ctx context.Context, params *protocol.CompletionParams) (_ *protocol.CompletionList, rerr error) {
@@ -39,7 +39,7 @@ func (s *server) Completion(ctx context.Context, params *protocol.CompletionPara
 	var candidates []completion.CompletionItem
 	var surrounding *completion.Selection
 	switch snapshot.FileKind(fh) {
-	case file.Go:
+	case file.Gno:
 		candidates, surrounding, err = completion.Completion(ctx, snapshot, fh, params.Position, params.Context)
 	case file.Mod:
 		candidates, surrounding = nil, nil
@@ -77,7 +77,7 @@ func (s *server) Completion(ctx context.Context, params *protocol.CompletionPara
 	if err != nil {
 		return nil, err
 	}
-	if snapshot.FileKind(fh) == file.Go {
+	if snapshot.FileKind(fh) == file.Gno {
 		s.saveLastCompletion(fh.URI(), fh.Version(), items, params.Position)
 	}
 
@@ -158,7 +158,7 @@ func toProtocolCompletionItems(candidates []completion.CompletionItem, surroundi
 			// Insert and Replace ranges share the same start position and
 			// the same text edit but the end position may differ.
 			// See the comment for the CompletionItem's TextEdit field.
-			// https://pkg.go.dev/golang.org/x/tools/gopls/internal/protocol#CompletionItem
+			// https://pkg.go.dev/github.com/gnolang/gno/contribs/gnopls/internal/protocol#CompletionItem
 			edits = &protocol.Or_CompletionItem_textEdit{
 				Value: protocol.InsertReplaceEdit{
 					NewText: insertText,

@@ -7,8 +7,8 @@ package misc
 import (
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/compare"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/compare"
 )
 
 // This is a slight variant of TestHoverOnError in definition_test.go

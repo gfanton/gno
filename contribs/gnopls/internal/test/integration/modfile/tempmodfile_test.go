@@ -7,7 +7,7 @@ package modfile
 import (
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 // This test replaces an older, problematic test (golang/go#57784). But it has

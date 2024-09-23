@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/server"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/server"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
 )
 
 // This file holds various tests for UX with respect to broken workspaces.

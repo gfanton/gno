@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/infertypeargs"
+	"github.com/gnolang/gno/contribs/gnopls/internal/analysis/infertypeargs"
 )
 
 func Test(t *testing.T) {

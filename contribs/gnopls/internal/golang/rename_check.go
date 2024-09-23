@@ -43,11 +43,11 @@ import (
 	"unicode"
 
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/safetoken"
+	"github.com/gnolang/gno/contribs/gnopls/internal/aliases"
+	"github.com/gnolang/gno/contribs/gnopls/internal/typeparams"
+	"github.com/gnolang/gno/contribs/gnopls/internal/typesinternal"
 	"golang.org/x/tools/refactor/satisfy"
 )
 

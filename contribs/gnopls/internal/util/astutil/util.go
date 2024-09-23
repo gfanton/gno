@@ -8,7 +8,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/gnolang/gno/contribs/gnopls/internal/typeparams"
 )
 
 // UnpackRecv unpacks a receiver type expression, reporting whether it is a

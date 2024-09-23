@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
 )
 
 var (
@@ -42,7 +42,7 @@ func DefaultOptions(overrides ...func(*Options)) *Options {
 			},
 			ServerOptions: ServerOptions{
 				SupportedCodeActions: map[file.Kind]map[protocol.CodeActionKind]bool{
-					file.Go: {
+					file.Gno: {
 						// This should include specific leaves in the tree,
 						// (e.g. refactor.inline.call) not generic branches
 						// (e.g. refactor.inline or refactor).

@@ -38,13 +38,13 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/gopls/internal/debug"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/version"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/tool"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cmd"
+	"github.com/gnolang/gno/contribs/gnopls/internal/debug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/version"
+	"github.com/gnolang/gno/contribs/gnopls/internal/testenv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 	"golang.org/x/tools/txtar"
 )
 

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/integration/fake"
 )
 
 var gopath = flag.String("gopath", "", "if set, run goimports scan with this GOPATH value")

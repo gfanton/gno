@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/mod"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/mod"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 func (s *server) InlayHint(ctx context.Context, params *protocol.InlayHintParams) ([]protocol.InlayHint, error) {
@@ -28,7 +28,7 @@ func (s *server) InlayHint(ctx context.Context, params *protocol.InlayHintParams
 	switch snapshot.FileKind(fh) {
 	case file.Mod:
 		return mod.InlayHint(ctx, snapshot, fh, params.Range)
-	case file.Go:
+	case file.Gno:
 		return golang.InlayHint(ctx, snapshot, fh, params.Range)
 	}
 	return nil, nil // empty result

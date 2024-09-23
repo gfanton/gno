@@ -7,7 +7,7 @@ package fake
 import (
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 func TestApplyEdits(t *testing.T) {

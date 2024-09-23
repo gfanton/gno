@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/lsprpc"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/lsprpc"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/integration/fake"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2/servertest"
 )
 
 // github.com/pilosa/pilosa is a repository that has historically caused

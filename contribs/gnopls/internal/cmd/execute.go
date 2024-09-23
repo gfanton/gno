@@ -13,10 +13,10 @@ import (
 	"os"
 	"slices"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/server"
-	"golang.org/x/tools/internal/tool"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/server"
+	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 )
 
 // execute implements the LSP ExecuteCommand verb for gopls.
@@ -36,7 +36,7 @@ with a set of optional JSON argument values.
 Some commands return a result, also JSON.
 
 Gopls' command set is defined by the command.Interface type; see
-https://pkg.go.dev/golang.org/x/tools/gopls/internal/protocol/command#Interface.
+https://pkg.go.dev/github.com/gnolang/gno/contribs/gnopls/internal/protocol/command#Interface.
 It is not a stable interface: commands may change or disappear without notice.
 
 Examples:

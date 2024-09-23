@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"golang.org/x/tools/gopls/internal/util/constraints"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/constraints"
 )
 
 // Implementation details:

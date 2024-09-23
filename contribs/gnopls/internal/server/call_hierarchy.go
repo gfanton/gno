@@ -7,10 +7,10 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 )
 
 func (s *server) PrepareCallHierarchy(ctx context.Context, params *protocol.CallHierarchyPrepareParams) ([]protocol.CallHierarchyItem, error) {
@@ -22,7 +22,7 @@ func (s *server) PrepareCallHierarchy(ctx context.Context, params *protocol.Call
 		return nil, err
 	}
 	defer release()
-	if snapshot.FileKind(fh) != file.Go {
+	if snapshot.FileKind(fh) != file.Gno {
 		return nil, nil // empty result
 	}
 	return golang.PrepareCallHierarchy(ctx, snapshot, fh, params.Position)
@@ -37,7 +37,7 @@ func (s *server) IncomingCalls(ctx context.Context, params *protocol.CallHierarc
 		return nil, err
 	}
 	defer release()
-	if snapshot.FileKind(fh) != file.Go {
+	if snapshot.FileKind(fh) != file.Gno {
 		return nil, nil // empty result
 	}
 	return golang.IncomingCalls(ctx, snapshot, fh, params.Item.Range.Start)
@@ -52,7 +52,7 @@ func (s *server) OutgoingCalls(ctx context.Context, params *protocol.CallHierarc
 		return nil, err
 	}
 	defer release()
-	if snapshot.FileKind(fh) != file.Go {
+	if snapshot.FileKind(fh) != file.Gno {
 		return nil, nil // empty result
 	}
 	return golang.OutgoingCalls(ctx, snapshot, fh, params.Item.Range.Start)

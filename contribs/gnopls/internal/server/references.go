@@ -7,13 +7,13 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/telemetry"
+	"github.com/gnolang/gno/contribs/gnopls/internal/template"
 )
 
 func (s *server) References(ctx context.Context, params *protocol.ReferenceParams) (_ []protocol.Location, rerr error) {
@@ -33,7 +33,7 @@ func (s *server) References(ctx context.Context, params *protocol.ReferenceParam
 	switch snapshot.FileKind(fh) {
 	case file.Tmpl:
 		return template.References(ctx, snapshot, fh, params)
-	case file.Go:
+	case file.Gno:
 		return golang.References(ctx, snapshot, fh, params.Position, params.Context.IncludeDeclaration)
 	}
 	return nil, nil // empty result

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/useany"
+	"github.com/gnolang/gno/contribs/gnopls/internal/analysis/useany"
 )
 
 func Test(t *testing.T) {

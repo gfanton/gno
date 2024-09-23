@@ -7,7 +7,7 @@
 //
 // To run:
 //
-// $ cd $GOPATH/src/golang.org/x/tools/gopls
+// $ cd $GOPATH/src/github.com/gnolang/gno/contribs/gnopls
 // $ go run release/release.go -version=<version>
 package main
 

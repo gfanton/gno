@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/template"
 )
 
 func (s *server) DocumentHighlight(ctx context.Context, params *protocol.DocumentHighlightParams) ([]protocol.DocumentHighlight, error) {
@@ -28,7 +28,7 @@ func (s *server) DocumentHighlight(ctx context.Context, params *protocol.Documen
 	switch snapshot.FileKind(fh) {
 	case file.Tmpl:
 		return template.Highlight(ctx, snapshot, fh, params.Position)
-	case file.Go:
+	case file.Gno:
 		rngs, err := golang.Highlight(ctx, snapshot, fh, params.Position)
 		if err != nil {
 			event.Error(ctx, "no highlight", err)

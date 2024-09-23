@@ -15,7 +15,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/version"
+	"github.com/gnolang/gno/contribs/gnopls/internal/version"
 )
 
 type PrintMode int

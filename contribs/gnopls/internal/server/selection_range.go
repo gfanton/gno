@@ -8,11 +8,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/parsego"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
 )
 
 // selectionRange defines the textDocument/selectionRange feature,
@@ -36,7 +36,7 @@ func (s *server) SelectionRange(ctx context.Context, params *protocol.SelectionR
 	}
 	defer release()
 
-	if kind := snapshot.FileKind(fh); kind != file.Go {
+	if kind := snapshot.FileKind(fh); kind != file.Gno {
 		return nil, fmt.Errorf("SelectionRange not supported for file of type %s", kind)
 	}
 

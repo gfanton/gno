@@ -7,9 +7,9 @@ package cache
 import (
 	"path/filepath"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/persistent"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/persistent"
 )
 
 // A fileMap maps files in the snapshot, with some additional bookkeeping:

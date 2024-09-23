@@ -19,7 +19,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/gnolang/gno/contribs/gnopls/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -30,7 +30,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "simplifycompositelit"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifycompositelit",
+	URL:      "https://pkg.go.dev/github.com/gnolang/gno/contribs/gnopls/internal/analysis/simplifycompositelit",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

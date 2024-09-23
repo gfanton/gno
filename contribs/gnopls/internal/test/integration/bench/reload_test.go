@@ -6,7 +6,7 @@ package bench
 import (
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/test/integration"
 )
 
 // BenchmarkReload benchmarks reloading a file metadata after a change to an import.

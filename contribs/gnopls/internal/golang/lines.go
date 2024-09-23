@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/safetoken"
 )
 
 // canSplitLines checks whether we can split lists of elements inside

@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/util/lru"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/lru"
 )
 
 func TestCache(t *testing.T) {

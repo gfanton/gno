@@ -7,16 +7,16 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/mod"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/gopls/internal/work"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/mod"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/telemetry"
+	"github.com/gnolang/gno/contribs/gnopls/internal/template"
+	"github.com/gnolang/gno/contribs/gnopls/internal/work"
 )
 
 func (s *server) Hover(ctx context.Context, params *protocol.HoverParams) (_ *protocol.Hover, rerr error) {
@@ -37,7 +37,7 @@ func (s *server) Hover(ctx context.Context, params *protocol.HoverParams) (_ *pr
 	switch snapshot.FileKind(fh) {
 	case file.Mod:
 		return mod.Hover(ctx, snapshot, fh, params.Position)
-	case file.Go:
+	case file.Gno:
 		var pkgURL func(path golang.PackagePath, fragment string) protocol.URI
 		if snapshot.Options().LinksInHover == settings.LinksInHover_Gopls {
 			web, err := s.getWeb()

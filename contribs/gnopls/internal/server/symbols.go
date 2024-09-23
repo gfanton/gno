@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/golang"
+	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/template"
 )
 
 func (s *server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSymbolParams) ([]any, error) {
@@ -29,7 +29,7 @@ func (s *server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSy
 	switch snapshot.FileKind(fh) {
 	case file.Tmpl:
 		docSymbols, err = template.DocumentSymbols(snapshot, fh)
-	case file.Go:
+	case file.Gno:
 		docSymbols, err = golang.DocumentSymbols(ctx, snapshot, fh)
 	default:
 		return nil, nil // empty result

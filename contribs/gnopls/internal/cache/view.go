@@ -26,17 +26,17 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/moremaps"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
+	"github.com/gnolang/gno/contribs/gnopls/internal/imports"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/moremaps"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/pathutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/vulncheck"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 // A Folder represents an LSP workspace folder, together with its per-folder
@@ -817,7 +817,7 @@ func defineView(ctx context.Context, fs file.Source, folder *Folder, forFile fil
 	def := new(viewDefinition)
 	def.folder = folder
 
-	if forFile != nil && fileKind(forFile) == file.Go {
+	if forFile != nil && fileKind(forFile) == file.Gno {
 		// If the file has GOOS/GOARCH build constraints that
 		// don't match the folder's environment (which comes from
 		// 'go env' in the folder, plus user options),

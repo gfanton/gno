@@ -18,14 +18,14 @@ import (
 	"strings"
 	"sync"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration/fake/glob"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
+	"github.com/gnolang/gno/contribs/gnopls/internal/test/integration/fake/glob"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/util/pathutil"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2/servertest"
+	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
 )
 
 // Editor is a fake client editor.  It keeps track of client state and can be

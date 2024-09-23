@@ -9,8 +9,8 @@ package vulncheck
 import (
 	"time"
 
-	gvc "golang.org/x/tools/gopls/internal/vulncheck/govulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
+	gvc "github.com/gnolang/gno/contribs/gnopls/internal/vulncheck/govulncheck"
+	"github.com/gnolang/gno/contribs/gnopls/internal/vulncheck/osv"
 )
 
 // Result is the result of vulnerability scanning.

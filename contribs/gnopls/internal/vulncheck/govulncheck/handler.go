@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
+	"github.com/gnolang/gno/contribs/gnopls/internal/vulncheck/osv"
 )
 
 // Handler handles messages to be presented in a vulnerability scan output

@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	. "golang.org/x/tools/gopls/internal/lsprpc"
-	"golang.org/x/tools/internal/event"
-	jsonrpc2_v2 "golang.org/x/tools/internal/jsonrpc2_v2"
+	. "github.com/gnolang/gno/contribs/gnopls/internal/lsprpc"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
+	jsonrpc2_v2 "github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2_v2"
 )
 
 var noopBinder = BinderFunc(func(context.Context, *jsonrpc2_v2.Connection) jsonrpc2_v2.ConnectionOptions {
