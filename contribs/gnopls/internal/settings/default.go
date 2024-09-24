@@ -48,10 +48,10 @@ func DefaultOptions(overrides ...func(*Options)) *Options {
 						// (e.g. refactor.inline or refactor).
 						protocol.SourceFixAll:            true,
 						protocol.SourceOrganizeImports:   true,
-						protocol.QuickFix:                true,
-						GoAssembly:                       true,
+						protocol.QuickFix:                false,
+						GoAssembly:                       false,
 						GoDoc:                            true,
-						GoFreeSymbols:                    true,
+						GoFreeSymbols:                    false,
 						GoplsDocFeatures:                 true,
 						RefactorRewriteChangeQuote:       true,
 						RefactorRewriteFillStruct:        true,

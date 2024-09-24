@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package cmd handles the gopls command line.
+// Package cmd handles the gnopls command line.
 // It contains a handler for each of the modes, along with all the flag handling
 // and the command line output format.
 package cmd
@@ -24,17 +24,17 @@ import (
 
 	"github.com/gnolang/gno/contribs/gnopls/internal/cache"
 	"github.com/gnolang/gno/contribs/gnopls/internal/debug"
+	"github.com/gnolang/gno/contribs/gnopls/internal/diff"
 	"github.com/gnolang/gno/contribs/gnopls/internal/filecache"
+	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2"
 	"github.com/gnolang/gno/contribs/gnopls/internal/lsprpc"
 	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command"
 	"github.com/gnolang/gno/contribs/gnopls/internal/server"
 	"github.com/gnolang/gno/contribs/gnopls/internal/settings"
+	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 	"github.com/gnolang/gno/contribs/gnopls/internal/util/browser"
 	bugpkg "github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
-	"github.com/gnolang/gno/contribs/gnopls/internal/diff"
-	"github.com/gnolang/gno/contribs/gnopls/internal/jsonrpc2"
-	"github.com/gnolang/gno/contribs/gnopls/internal/tool"
 )
 
 // Application is the main application as passed to tool.Main
@@ -66,7 +66,7 @@ type Application struct {
 	OCAgent string `flag:"ocagent" help:"the address of the ocagent (e.g. http://localhost:55678), or off"`
 
 	// PrepareOptions is called to update the options when a new view is built.
-	// It is primarily to allow the behavior of gopls to be modified by hooks.
+	// It is primarily to allow the behavior of gnopls to be modified by hooks.
 	PrepareOptions func(*settings.Options)
 
 	// editFlags holds flags that control how file edit operations
@@ -108,7 +108,7 @@ func New() *Application {
 }
 
 // Name implements tool.Application returning the binary name.
-func (app *Application) Name() string { return "gopls" }
+func (app *Application) Name() string { return "gnopls" }
 
 // Usage implements tool.Application returning empty extra argument usage.
 func (app *Application) Usage() string { return "" }
@@ -125,18 +125,18 @@ func (app *Application) DetailedHelp(f *flag.FlagSet) {
 	defer w.Flush()
 
 	fmt.Fprint(w, `
-gopls is a Go language server.
+gnopls is a Go language server.
 
 It is typically used with an editor to provide language features. When no
-command is specified, gopls will default to the 'serve' command. The language
-features can also be accessed via the gopls command-line interface.
+command is specified, gnopls will default to the 'serve' command. The language
+features can also be accessed via the gnopls command-line interface.
 
 For documentation of all its features, see:
 
-   https://github.com/golang/tools/blob/master/gopls/doc/features
+   https://github.com/golang/tools/blob/master/gnopls/doc/features
 
 Usage:
-  gopls help [<subject>]
+  gnopls help [<subject>]
 
 Command:
 `)
@@ -233,7 +233,7 @@ func isZeroValue(f *flag.Flag, value string) bool {
 // temporary measure for compatibility.
 func (app *Application) Run(ctx context.Context, args ...string) error {
 	// In the category of "things we can do while waiting for the Go command":
-	// Pre-initialize the filecache, which takes ~50ms to hash the gopls
+	// Pre-initialize the filecache, which takes ~50ms to hash the gnopls
 	// executable, and immediately runs a gc.
 	filecache.Start()
 
@@ -252,7 +252,7 @@ func (app *Application) Run(ctx context.Context, args ...string) error {
 	return tool.CommandLineErrorf("Unknown command %v", command)
 }
 
-// Commands returns the set of commands supported by the gopls tool on the
+// Commands returns the set of commands supported by the gnopls tool on the
 // command line.
 // The command is specified by the first non flag argument.
 func (app *Application) Commands() []tool.Application {
@@ -314,7 +314,7 @@ var (
 	internalConnections = make(map[string]*connection)
 )
 
-// connect creates and initializes a new in-process gopls session.
+// connect creates and initializes a new in-process gnopls session.
 func (app *Application) connect(ctx context.Context) (*connection, error) {
 	client := newClient(app)
 	var svr protocol.Server
@@ -405,7 +405,7 @@ func (cli *cmdClient) registerProgressHandler(handler func(*protocol.ProgressPar
 	return token, unregister
 }
 
-// cmdClient defines the protocol.Client interface behavior of the gopls CLI tool.
+// cmdClient defines the protocol.Client interface behavior of the gnopls CLI tool.
 type cmdClient struct {
 	app *Application
 
@@ -498,7 +498,7 @@ func (c *cmdClient) WorkspaceFolders(ctx context.Context) ([]protocol.WorkspaceF
 func (c *cmdClient) Configuration(ctx context.Context, p *protocol.ParamConfiguration) ([]interface{}, error) {
 	results := make([]interface{}, len(p.Items))
 	for i, item := range p.Items {
-		if item.Section != "gopls" {
+		if item.Section != "gnopls" {
 			continue
 		}
 		m := map[string]interface{}{
@@ -668,7 +668,7 @@ func (c *cmdClient) PublishDiagnostics(ctx context.Context, p *protocol.PublishD
 	file.diagnostics = append(file.diagnostics, p.Diagnostics...)
 
 	// Perform a crude in-place deduplication.
-	// TODO(golang/go#60122): replace the gopls.diagnose_files
+	// TODO(golang/go#60122): replace the gnopls.diagnose_files
 	// command with support for textDocument/diagnostic,
 	// so that we don't need to do this de-duplication.
 	type key [6]interface{}
@@ -942,8 +942,8 @@ func (cmd *fix) Parent() string { return cmd.app.Name() }
 func (*fix) Usage() string      { return "" }
 func (*fix) ShortHelp() string  { return "apply suggested fixes (obsolete)" }
 func (*fix) DetailedHelp(flags *flag.FlagSet) {
-	fmt.Fprintf(flags.Output(), `No longer supported; use "gopls codeaction" instead.`)
+	fmt.Fprintf(flags.Output(), `No longer supported; use "gnopls codeaction" instead.`)
 }
 func (*fix) Run(ctx context.Context, args ...string) error {
-	return tool.CommandLineErrorf(`no longer supported; use "gopls codeaction" instead`)
+	return tool.CommandLineErrorf(`no longer supported; use "gnopls codeaction" instead`)
 }

@@ -899,7 +899,7 @@ func (s *Snapshot) fileWatchingGlobPatterns() map[protocol.RelativePattern]unit 
 		patterns[workPattern] = unit{}
 	}
 
-	extensions := "go,mod,sum,work"
+	extensions := "gno,mod,sum,work"
 	for _, ext := range s.Options().TemplateExtensions {
 		extensions += "," + ext
 	}

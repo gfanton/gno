@@ -16,18 +16,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/tools/go/packages"
 	"github.com/gnolang/gno/contribs/gnopls/internal/cache/metadata"
+	"github.com/gnolang/gno/contribs/gnopls/internal/event"
 	"github.com/gnolang/gno/contribs/gnopls/internal/file"
+	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
 	"github.com/gnolang/gno/contribs/gnopls/internal/label"
+	"github.com/gnolang/gno/contribs/gnopls/internal/packagesinternal"
 	"github.com/gnolang/gno/contribs/gnopls/internal/protocol"
 	"github.com/gnolang/gno/contribs/gnopls/internal/util/bug"
 	"github.com/gnolang/gno/contribs/gnopls/internal/util/immutable"
 	"github.com/gnolang/gno/contribs/gnopls/internal/util/pathutil"
-	"github.com/gnolang/gno/contribs/gnopls/internal/event"
-	"github.com/gnolang/gno/contribs/gnopls/internal/gocommand"
-	"github.com/gnolang/gno/contribs/gnopls/internal/packagesinternal"
 	"github.com/gnolang/gno/contribs/gnopls/internal/xcontext"
+	"golang.org/x/tools/go/packages"
 )
 
 var loadID uint64 // atomic identifier for loads
@@ -119,6 +119,9 @@ func (s *Snapshot) load(ctx context.Context, allowNetwork bool, scopes ...loadSc
 	startTime := time.Now()
 
 	inv, cleanupInvocation, err := s.GoCommandInvocation(allowNetwork, &gocommand.Invocation{
+		Env: []string{
+			"GOPACKAGESDRIVER=hello",
+		},
 		WorkingDir: s.view.root.Path(),
 	})
 	if err != nil {
@@ -132,8 +135,13 @@ func (s *Snapshot) load(ctx context.Context, allowNetwork bool, scopes ...loadSc
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
+	event.Error(ctx, "DEBUG:inv", fmt.Errorf("debug query: %+v", query))
+
 	cfg := s.config(ctx, inv)
 	pkgs, err := packages.Load(cfg, query...)
+	if len(pkgs) == 0 {
+		return fmt.Errorf("unable to load packages [%v]: %w", query, err)
+	}
 
 	// If the context was canceled, return early. Otherwise, we might be
 	// type-checking an incomplete result. Check the context directly,
