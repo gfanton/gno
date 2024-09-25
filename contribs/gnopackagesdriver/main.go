@@ -130,7 +130,7 @@ func main() {
 		// TODO: handle std libs and queries
 		dir, file := filepath.Split(target)
 		if file == "..." {
-			pkgQueryRes, err := gnomod.ListPkgs(dir)
+			pkgQueryRes, err := ListPkgs(dir)
 			if err != nil {
 				logger.Error("failed to get pkg list", zap.Error(err))
 				panic(err)
@@ -138,7 +138,7 @@ func main() {
 			pkgs = append(pkgs, pkgQueryRes...)
 		} else if strings.HasPrefix(target, "file=") {
 			dir = strings.TrimPrefix(dir, "file=")
-			pkgQueryRes, err := gnomod.ListPkgs(dir)
+			pkgQueryRes, err := ListPkgs(dir)
 			if err != nil {
 				logger.Error("failed to get pkg", zap.Error(err))
 				panic(err)
@@ -159,7 +159,7 @@ func main() {
 		pkg, err := gnoPkgToGo(&pkg, logger)
 		if err != nil {
 			logger.Error("failed to convert gno pkg to go pkg", zap.Error(err))
-			panic(err)
+			continue
 		}
 		pkgsCache[pkg.PkgPath] = pkg
 		res.Packages = append(res.Packages, pkg)
