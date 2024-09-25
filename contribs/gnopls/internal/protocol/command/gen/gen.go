@@ -13,8 +13,8 @@ import (
 	"log"
 	"text/template"
 
-	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command/commandmeta"
 	"github.com/gnolang/gno/contribs/gnopls/internal/imports"
+	"github.com/gnolang/gno/contribs/gnopls/internal/protocol/command/commandmeta"
 )
 
 const src = `// Copyright 2024 The Go Authors. All rights reserved.
@@ -101,6 +101,8 @@ type data struct {
 	Imports  map[string]bool
 	Commands []*commandmeta.Command
 }
+
+// TOOD: modify codegen to generate gnopls.command instead of gopls.command
 
 // Generate computes the new contents of ../command_gen.go from a
 // static analysis of the command.Interface type.
