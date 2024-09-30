@@ -11,8 +11,12 @@ run_air := $(tools_run) github.com/air-verse/air
 run_logname := go -C ./gotools run ./cmd/logname
 
 # Tailwind config
-output_css := ./assets/styles.css
 input_css := ./input.css
+output_css := ./public/styles.css
+
+# Esbuild config
+input_js := $(COMPONENTS_FOLDER)/**/*.ts
+output_js := ./public/js
 
 #############
 # Targets
@@ -45,9 +49,10 @@ fmt:
 # Run the development dependencies in parallel
 dev:
 	@echo "-- starting development tools"
-	$(MAKE) -j 3 \
+	$(MAKE) -j 4 \
 		dev.templ \
 		dev.server \
+		dev.esbuild \
 		dev.tailwind
 
 # `Templ` in development mode
@@ -69,9 +74,14 @@ dev.server: | .cache
 		2>&1 | $(run_logname) gnoweb
 
 # Tailwind CSS in development mode
-dev.tailwind: node_modules
-	npx tailwindcss -i $(input_css) -o $(output_css) --minify --watch \
-		2>&1 | $(run_logname) tailwind
+dev.tailwind: node_modules | public
+	npx postcss $(input_css) -o $(output_css) --watch \
+		2>&1 | $(run_logname) postcss
+
+# Tailwind CSS in development mode
+dev.esbuild: node_modules | public
+	npx esbuild $(input_js) --bundle --outdir=$(output_js) --watch \
+		2>&1 | $(run_logname) esbuild
 
 # Install deps for development purpose
 deps:
@@ -81,4 +91,11 @@ deps:
 package-lock.json node_modules: package.json
 	npm install && touch $@
 
+clean:
+	rm -rf public
+
+fclean: clean
+	rm -rf node_modules .cache
+
 .cache:; mkdir -p $@
+public:; mkdir -p $@

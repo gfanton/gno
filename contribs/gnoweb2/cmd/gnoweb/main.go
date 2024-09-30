@@ -73,7 +73,7 @@ func execWeb(cfg *webCfg, args []string, io commands.IO) (err error) {
 	md := goldmark.New()
 
 	staticMeta := gnoweb.StaticMetadata{
-		AssetsPath: "/assets/",
+		AssetsPath: "/public/",
 	}
 
 	mux := http.NewServeMux()
@@ -119,7 +119,6 @@ func execWeb(cfg *webCfg, args []string, io commands.IO) (err error) {
 
 	logger.Info("Running", "listener", bindaddr.String())
 
-	// mux := http.NewServeMux()
 	server := &http.Server{
 		Handler:           mux,
 		Addr:              bindaddr.String(),
