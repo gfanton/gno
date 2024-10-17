@@ -1,8 +1,11 @@
 package vm
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
@@ -79,6 +82,7 @@ const (
 	QueryFuncs   = "qfuncs"
 	QueryEval    = "qeval"
 	QueryFile    = "qfile"
+	QueryPaths   = "qpaths"
 )
 
 func (vh vmHandler) Query(ctx sdk.Context, req abci.RequestQuery) abci.ResponseQuery {
@@ -100,6 +104,8 @@ func (vh vmHandler) Query(ctx sdk.Context, req abci.RequestQuery) abci.ResponseQ
 		res = vh.queryEval(ctx, req)
 	case QueryFile:
 		res = vh.queryFile(ctx, req)
+	case QueryPaths:
+		res = vh.queryPaths(ctx, req)
 	default:
 		return sdk.ABCIResponseQueryFromError(
 			std.ErrUnknownRequest(fmt.Sprintf(
@@ -175,6 +181,46 @@ func (vh vmHandler) queryFuncs(ctx sdk.Context, req abci.RequestQuery) (res abci
 		return
 	}
 	res.Data = []byte(fsigs.JSON())
+	return
+}
+
+// queryFuncs returns public facing function signatures as JSON.
+func (vh vmHandler) queryPaths(ctx sdk.Context, req abci.RequestQuery) (res abci.ResponseQuery) {
+	var err error
+	var limit, offset int
+
+	data := bytes.TrimSpace(req.Data)
+	before, after, found := strings.Cut(string(data), ":")
+	switch {
+	case !found && len(before) == 0:
+		limit = 50 // default limit
+	case found && len(after) > 0:
+		if offset, err = strconv.Atoi(before); err != nil {
+			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", offset, err))
+		} else if limit, err = strconv.Atoi(after); err != nil {
+			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", limit, err))
+		}
+	default:
+		if limit, err = strconv.Atoi(before); err != nil {
+			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", limit, err))
+		}
+	}
+
+	if res.Error != nil {
+		return
+	}
+
+	paths, err := vh.vm.QueryPackagesPath(ctx, offset, limit)
+	if err != nil {
+		res.Error = sdk.ABCIError(err)
+		return
+	}
+
+	res.Data, err = json.Marshal(paths)
+	if err != nil {
+		res.Error = sdk.ABCIError(fmt.Errorf("unable to marshal result: %w", err))
+	}
+
 	return
 }
 
