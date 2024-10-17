@@ -184,26 +184,29 @@ func (vh vmHandler) queryFuncs(ctx sdk.Context, req abci.RequestQuery) (res abci
 	return
 }
 
-// queryFuncs returns public facing function signatures as JSON.
+// queryPaths retrieves paginated package paths based on request data.
+// The request format is "offset:limit". If not provided, defaults are offset=0 and limit=50.
 func (vh vmHandler) queryPaths(ctx sdk.Context, req abci.RequestQuery) (res abci.ResponseQuery) {
 	var err error
 	var limit, offset int
 
 	data := bytes.TrimSpace(req.Data)
 	before, after, found := strings.Cut(string(data), ":")
-	switch {
-	case !found && len(before) == 0:
-		limit = 50 // default limit
-	case found && len(after) > 0:
-		if offset, err = strconv.Atoi(before); err != nil {
-			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", offset, err))
-		} else if limit, err = strconv.Atoi(after); err != nil {
-			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", limit, err))
-		}
-	default:
-		if limit, err = strconv.Atoi(before); err != nil {
-			res.Error = sdk.ABCIError(fmt.Errorf("unable to parse limit %d: %w", limit, err))
-		}
+	if !found {
+		res = sdk.ABCIResponseQueryFromError(
+			fmt.Errorf("invalid data format, should be `offset:limit`"),
+		)
+		return
+	}
+
+	if offset, err = strconv.Atoi(before); err != nil {
+		res = sdk.ABCIResponseQueryFromError(
+			fmt.Errorf("unable to parse limit %q: %w", before, err),
+		)
+	} else if limit, err = strconv.Atoi(after); err != nil {
+		res = sdk.ABCIResponseQueryFromError(
+			fmt.Errorf("unable to parse offset %q: %w", after, err),
+		)
 	}
 
 	if res.Error != nil {
@@ -212,13 +215,15 @@ func (vh vmHandler) queryPaths(ctx sdk.Context, req abci.RequestQuery) (res abci
 
 	paths, err := vh.vm.QueryPackagesPath(ctx, offset, limit)
 	if err != nil {
-		res.Error = sdk.ABCIError(err)
+		res = sdk.ABCIResponseQueryFromError(err)
 		return
 	}
 
 	res.Data, err = json.Marshal(paths)
 	if err != nil {
-		res.Error = sdk.ABCIError(fmt.Errorf("unable to marshal result: %w", err))
+		res = sdk.ABCIResponseQueryFromError(
+			fmt.Errorf("unable to marshal result: %w", err),
+		)
 	}
 
 	return
