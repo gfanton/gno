@@ -5,16 +5,41 @@ package telemetry
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 
 	"github.com/gnolang/gno/tm2/pkg/telemetry/config"
 	"github.com/gnolang/gno/tm2/pkg/telemetry/metrics"
+	"github.com/gnolang/gno/tm2/pkg/telemetry/tracer"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 var (
 	globalConfig         config.Config
 	telemetryInitialized atomic.Bool
 )
+
+type TracerFactory func() trace.Tracer
+
+func Tracer(name string, options ...trace.TracerOption) TracerFactory {
+	var once sync.Once
+	return func() (t trace.Tracer) {
+		once.Do(func() {
+			var provider trace.TracerProvider
+			if MetricsEnabled() {
+				provider = otel.GetTracerProvider()
+			} else {
+				provider = noop.NewTracerProvider()
+			}
+
+			t = provider.Tracer(name, options...)
+		})
+
+		return t
+	}
+}
 
 // MetricsEnabled returns true if metrics have been initialized
 func MetricsEnabled() bool {
@@ -41,5 +66,13 @@ func Init(c config.Config) error {
 	// Update the global configuration
 	globalConfig = c
 
-	return metrics.Init(c)
+	if err := metrics.Init(c); err != nil {
+		return fmt.Errorf("unable to init metrics: %w", err)
+	}
+
+	if err := tracer.Init(c); err != nil {
+		return fmt.Errorf("unable to init tracer: %w", err)
+	}
+
+	return nil
 }

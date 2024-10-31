@@ -19,6 +19,7 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/telemetry"
 	"github.com/gnolang/gno/tm2/pkg/telemetry/metrics"
 	"github.com/gorilla/websocket"
+	"go.opentelemetry.io/otel/propagation"
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	types "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
@@ -26,6 +27,8 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/gnolang/gno/tm2/pkg/service"
 )
+
+var tracer = telemetry.Tracer("handler")
 
 // RegisterRPCFuncs adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.
 // "result" is the interface on which the result objects are registered, and is populated with every RPCResponse
@@ -37,6 +40,7 @@ func RegisterRPCFuncs(mux *http.ServeMux, funcMap map[string]*RPCFunc, logger *s
 			mux.HandleFunc(
 				"/"+funcName,
 				telemetryMiddleware(
+					funcName,
 					makeHTTPHandler(rpcFunc, logger),
 				),
 			)
@@ -46,6 +50,7 @@ func RegisterRPCFuncs(mux *http.ServeMux, funcMap map[string]*RPCFunc, logger *s
 		mux.HandleFunc(
 			"/",
 			telemetryMiddleware(
+				"jsorpc",
 				handleInvalidJSONRPCPaths(makeJSONRPCHandler(funcMap, logger)),
 			),
 		)
@@ -211,8 +216,17 @@ func handleInvalidJSONRPCPaths(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // telemetryMiddleware is the telemetry middleware handler
-func telemetryMiddleware(next http.Handler) http.HandlerFunc {
+func telemetryMiddleware(funcname string, next http.Handler) http.HandlerFunc {
+	prop := propagation.TextMapPropagator(propagation.Baggage{})
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := prop.Extract(context.Background(), propagation.HeaderCarrier(r.Header))
+		ctx, span := tracer().Start(ctx, funcname)
+		// Reinject span
+		prop.Inject(ctx, propagation.HeaderCarrier(r.Header))
+
+		defer span.End()
+
 		start := time.Now()
 
 		next.ServeHTTP(w, r)
