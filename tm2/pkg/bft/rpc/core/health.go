@@ -1,8 +1,9 @@
 package core
 
 import (
+	"context"
+
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 )
 
 // Get node health. Returns empty result (200 OK) on success, no response - in
@@ -36,6 +37,6 @@ import (
 //	}
 //
 // ```
-func Health(ctx *rpctypes.Context) (*ctypes.ResultHealth, error) {
+func Health(ctx context.Context) (*ctypes.ResultHealth, error) {
 	return &ctypes.ResultHealth{}, nil
 }

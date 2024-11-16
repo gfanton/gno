@@ -1,8 +1,9 @@
 package core
 
 import (
+	"context"
+
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 	"github.com/gnolang/gno/tm2/pkg/errors"
 )
 
@@ -154,7 +155,7 @@ import (
 //	  }
 //
 // ```
-func NetInfo(ctx *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
+func NetInfo(ctx context.Context) (*ctypes.ResultNetInfo, error) {
 	out, in, _ := p2pPeers.NumPeers()
 	peers := make([]ctypes.Peer, 0, out+in)
 	for _, peer := range p2pPeers.Peers().List() {
@@ -177,7 +178,7 @@ func NetInfo(ctx *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 	}, nil
 }
 
-func UnsafeDialSeeds(ctx *rpctypes.Context, seeds []string) (*ctypes.ResultDialSeeds, error) {
+func UnsafeDialSeeds(ctx context.Context, seeds []string) (*ctypes.ResultDialSeeds, error) {
 	if len(seeds) == 0 {
 		return &ctypes.ResultDialSeeds{}, errors.New("No seeds provided")
 	}
@@ -188,7 +189,7 @@ func UnsafeDialSeeds(ctx *rpctypes.Context, seeds []string) (*ctypes.ResultDialS
 	return &ctypes.ResultDialSeeds{Log: "Dialing seeds in progress. See /net_info for details"}, nil
 }
 
-func UnsafeDialPeers(ctx *rpctypes.Context, peers []string, persistent bool) (*ctypes.ResultDialPeers, error) {
+func UnsafeDialPeers(ctx context.Context, peers []string, persistent bool) (*ctypes.ResultDialPeers, error) {
 	if len(peers) == 0 {
 		return &ctypes.ResultDialPeers{}, errors.New("No peers provided")
 	}
@@ -250,6 +251,6 @@ func UnsafeDialPeers(ctx *rpctypes.Context, peers []string, persistent bool) (*c
 //	}
 //
 // ```
-func Genesis(ctx *rpctypes.Context) (*ctypes.ResultGenesis, error) {
+func Genesis(ctx context.Context) (*ctypes.ResultGenesis, error) {
 	return &ctypes.ResultGenesis{Genesis: genDoc}, nil
 }

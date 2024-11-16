@@ -1,9 +1,10 @@
 package core
 
 import (
+	"context"
+
 	abci "github.com/gnolang/gno/tm2/pkg/bft/abci/types"
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 )
 
 // Query the application for some information.
@@ -55,7 +56,7 @@ import (
 // | data      | []byte | false   | true     | Data                                           |
 // | height    | int64  | 0       | false    | Height (0 means latest)                        |
 // | prove     | bool   | false   | false    | Includes proof if true                         |
-func ABCIQuery(ctx *rpctypes.Context, path string, data []byte, height int64, prove bool) (*ctypes.ResultABCIQuery, error) {
+func ABCIQuery(ctx context.Context, path string, data []byte, height int64, prove bool) (*ctypes.ResultABCIQuery, error) {
 	resQuery, err := proxyAppQuery.QuerySync(abci.RequestQuery{
 		Path:   path,
 		Data:   data,
@@ -103,7 +104,7 @@ func ABCIQuery(ctx *rpctypes.Context, path string, data []byte, height int64, pr
 //	}
 //
 // ```
-func ABCIInfo(ctx *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
+func ABCIInfo(ctx context.Context) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := proxyAppQuery.InfoSync(abci.RequestInfo{})
 	if err != nil {
 		return nil, err

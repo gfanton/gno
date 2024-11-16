@@ -11,7 +11,7 @@ import (
 // Tx allows you to query the transaction results. `nil` could mean the
 // transaction is in the mempool, invalidated, or was not sent in the first
 // place
-func Tx(_ *rpctypes.Context, hash []byte) (*ctypes.ResultTx, error) {
+func Tx(_ *rpctypes.ContextRequest, hash []byte) (*ctypes.ResultTx, error) {
 	// Get the result index from storage, if any
 	resultIndex, err := sm.LoadTxResultIndex(stateDB, hash)
 	if err != nil {

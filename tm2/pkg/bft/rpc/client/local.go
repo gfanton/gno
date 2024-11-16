@@ -31,7 +31,7 @@ import (
 // powerful control during testing, you probably want the "client/mock" package.
 type Local struct {
 	Logger *slog.Logger
-	ctx    *rpctypes.Context
+	ctx    *rpctypes.ContextRequest
 }
 
 // NewLocal configures a client that calls the Node directly through rpc/core,
@@ -39,7 +39,7 @@ type Local struct {
 func NewLocal() *Local {
 	return &Local{
 		Logger: log.NewNoopLogger(),
-		ctx:    &rpctypes.Context{},
+		ctx:    &rpctypes.ContextRequest{},
 	}
 }
 

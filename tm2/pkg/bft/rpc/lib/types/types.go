@@ -253,19 +253,29 @@ type WSRPCConnection interface {
 	Context() context.Context
 }
 
-// Context is the first parameter for all functions. It carries a json-rpc
+var ContextRequestKey struct{}
+
+// ContextRequest is the first parameter for all functions. It carries a json-rpc
 // request, http request and websocket connection.
 //
 // - JSONReq is non-nil when JSONRPC is called over websocket or HTTP.
 // - WSConn is non-nil when we're connected via a websocket.
 // - HTTPReq is non-nil when URI or JSONRPC is called over HTTP.
-type Context struct {
+type ContextRequest struct {
 	// json-rpc request
 	JSONReq *RPCRequest
 	// websocket connection
 	WSConn WSRPCConnection
 	// http request
 	HTTPReq *http.Request
+}
+
+func NewContextFromContextRequest(ctx context.Context, ctxreq ContextRequest) context.Context {
+	return context.WithValue(ctx, ContextRequestKey, ctxreq)
+}
+
+func ContextRequestFromContext(ctx context.Context) ContextRequest {
+	return ctx.Value(ContextRequestKey).(ContextRequest)
 }
 
 // RemoteAddr returns the remote address (usually a string "IP:port").
@@ -277,7 +287,7 @@ type Context struct {
 // WS:
 //
 //	result of GetRemoteAddr
-func (ctx *Context) RemoteAddr() string {
+func (ctx *ContextRequest) RemoteAddr() string {
 	if ctx.HTTPReq != nil {
 		return ctx.HTTPReq.RemoteAddr
 	} else if ctx.WSConn != nil {
@@ -296,11 +306,23 @@ func (ctx *Context) RemoteAddr() string {
 // WS:
 //
 //	The context is canceled when the client's connections closes.
-func (ctx *Context) Context() context.Context {
-	if ctx.HTTPReq != nil {
-		return ctx.HTTPReq.Context()
-	} else if ctx.WSConn != nil {
-		return ctx.WSConn.Context()
-	}
-	return context.Background()
-}
+// func (ctx *Context) Context() context.Context {
+// 	if ctx.HTTPReq != nil {
+// 		return ctx.HTTPReq.Context()
+// 	} else if ctx.WSConn != nil {
+// 		return ctx.WSConn.Context()
+// 	}
+// 	return context.Background()
+// }
+
+// func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
+// 	return ctx.Context().Deadline()
+// }
+
+// func (ctx *Context) Done() <-chan struct{} {
+// 	return ctx.Context().Done()
+// }
+
+// func (ctx *Context) Err() error {
+// 	return ctx.Context().Err()
+// }

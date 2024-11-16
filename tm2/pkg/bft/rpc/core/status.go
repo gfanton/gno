@@ -1,10 +1,10 @@
 package core
 
 import (
+	"context"
 	"time"
 
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 	sm "github.com/gnolang/gno/tm2/pkg/bft/state"
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 )
@@ -72,7 +72,7 @@ import (
 //	}
 //
 // ```
-func Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
+func Status(ctx context.Context) (*ctypes.ResultStatus, error) {
 	var latestHeight int64
 	if getFastSync() {
 		latestHeight = blockStore.Height()
