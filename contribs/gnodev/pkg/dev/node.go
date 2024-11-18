@@ -26,6 +26,8 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/log"
 	"github.com/gnolang/gno/tm2/pkg/sdk"
 	"github.com/gnolang/gno/tm2/pkg/std"
+	"github.com/gnolang/gno/tm2/pkg/telemetry"
+	telcfg "github.com/gnolang/gno/tm2/pkg/telemetry/config"
 	// backup "github.com/gnolang/tx-archive/backup/client"
 	// restore "github.com/gnolang/tx-archive/restore/client"
 )
@@ -479,6 +481,15 @@ func (n *Node) rebuildNode(ctx context.Context, genesis gnoland.GnoGenesisState)
 	// Setup node config
 	nodeConfig := newNodeConfig(n.config.TMConfig, n.config.ChainID, genesis)
 	nodeConfig.GenesisTxResultHandler = n.genesisTxResultHandler
+
+	cfg := telcfg.DefaultTelemetryConfig()
+	cfg.TracingEnabled = true
+	cfg.TracingExporterEndpoint = "http://localhost:4318"
+
+	if err := telemetry.Init(*cfg); err != nil {
+		return fmt.Errorf("unable init telemetry: %w", err)
+	}
+
 	// Speed up stdlib loading after first start (saves about 2-3 seconds on each reload).
 	nodeConfig.CacheStdlibLoad = true
 	nodeConfig.Genesis.ConsensusParams.Block.MaxGas = n.config.MaxGasPerBlock

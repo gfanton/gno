@@ -140,7 +140,7 @@ func TestParseJSONArray(t *testing.T) {
 func TestParseJSONRPC(t *testing.T) {
 	t.Parallel()
 
-	demo := func(ctx *types.Context, height int, name string) {}
+	demo := func(ctx *types.ContextRequest, height int, name string) {}
 	call := NewRPCFunc(demo, "height,name")
 
 	cases := []struct {
@@ -178,7 +178,7 @@ func TestParseJSONRPC(t *testing.T) {
 func TestParseURI(t *testing.T) {
 	t.Parallel()
 
-	demo := func(ctx *types.Context, height int, name string) {}
+	demo := func(ctx *types.ContextRequest, height int, name string) {}
 	call := NewRPCFunc(demo, "height,name")
 
 	cases := []struct {

@@ -253,7 +253,7 @@ type WSRPCConnection interface {
 	Context() context.Context
 }
 
-var ContextRequestKey struct{}
+var contextRequestKey struct{}
 
 // ContextRequest is the first parameter for all functions. It carries a json-rpc
 // request, http request and websocket connection.
@@ -270,12 +270,12 @@ type ContextRequest struct {
 	HTTPReq *http.Request
 }
 
-func NewContextFromContextRequest(ctx context.Context, ctxreq ContextRequest) context.Context {
-	return context.WithValue(ctx, ContextRequestKey, ctxreq)
+func NewContextFromContextRequest(ctx context.Context, ctxreq *ContextRequest) context.Context {
+	return context.WithValue(ctx, contextRequestKey, ctxreq)
 }
 
 func ContextRequestFromContext(ctx context.Context) ContextRequest {
-	return ctx.Value(ContextRequestKey).(ContextRequest)
+	return ctx.Value(contextRequestKey).(ContextRequest)
 }
 
 // RemoteAddr returns the remote address (usually a string "IP:port").
@@ -305,24 +305,12 @@ func (ctx *ContextRequest) RemoteAddr() string {
 //
 // WS:
 //
-//	The context is canceled when the client's connections closes.
-// func (ctx *Context) Context() context.Context {
-// 	if ctx.HTTPReq != nil {
-// 		return ctx.HTTPReq.Context()
-// 	} else if ctx.WSConn != nil {
-// 		return ctx.WSConn.Context()
-// 	}
-// 	return context.Background()
-// }
-
-// func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
-// 	return ctx.Context().Deadline()
-// }
-
-// func (ctx *Context) Done() <-chan struct{} {
-// 	return ctx.Context().Done()
-// }
-
-// func (ctx *Context) Err() error {
-// 	return ctx.Context().Err()
-// }
+// The context is canceled when the client's connections closes.
+func (ctx *ContextRequest) Context() context.Context {
+	if ctx.HTTPReq != nil {
+		return ctx.HTTPReq.Context()
+	} else if ctx.WSConn != nil {
+		return ctx.WSConn.Context()
+	}
+	return context.Background()
+}

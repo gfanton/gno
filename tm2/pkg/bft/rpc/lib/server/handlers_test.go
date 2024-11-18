@@ -26,7 +26,7 @@ import (
 
 func testMux() *http.ServeMux {
 	funcMap := map[string]*rs.RPCFunc{
-		"c": rs.NewRPCFunc(func(ctx *types.Context, s string, i int) (string, error) { return "foo", nil }, "s,i"),
+		"c": rs.NewRPCFunc(func(ctx *types.ContextRequest, s string, i int) (string, error) { return "foo", nil }, "s,i"),
 	}
 	mux := http.NewServeMux()
 
@@ -269,7 +269,7 @@ func TestWebsocketManagerHandler(t *testing.T) {
 
 func newWSServer() *httptest.Server {
 	funcMap := map[string]*rs.RPCFunc{
-		"c": rs.NewWSRPCFunc(func(ctx *types.Context, s string, i int) (string, error) { return "foo", nil }, "s,i"),
+		"c": rs.NewWSRPCFunc(func(ctx *types.ContextRequest, s string, i int) (string, error) { return "foo", nil }, "s,i"),
 	}
 	wm := rs.NewWebsocketManager(funcMap)
 	wm.SetLogger(log.NewNoopLogger())

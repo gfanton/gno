@@ -1,28 +1,39 @@
 package core
 
 import (
+	"context"
+	"encoding/hex"
 	"fmt"
 
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 	sm "github.com/gnolang/gno/tm2/pkg/bft/state"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Tx allows you to query the transaction results. `nil` could mean the
 // transaction is in the mempool, invalidated, or was not sent in the first
 // place
-func Tx(_ *rpctypes.ContextRequest, hash []byte) (*ctypes.ResultTx, error) {
+func Tx(ctx context.Context, hash []byte) (*ctypes.ResultTx, error) {
+	ctx, span := tracer().Start(ctx, "tx",
+		trace.WithAttributes(attribute.String("hash", hex.EncodeToString(hash))))
+	defer span.End()
+
 	// Get the result index from storage, if any
 	resultIndex, err := sm.LoadTxResultIndex(stateDB, hash)
 	if err != nil {
 		return nil, err
 	}
 
+	span.SetAttributes(attribute.Int("resultsTxIndex", int(resultIndex.TxIndex)))
+
 	// Sanity check the block height
 	height, err := getHeight(blockStore.Height(), &resultIndex.BlockNum)
 	if err != nil {
 		return nil, err
 	}
+
+	span.SetAttributes(attribute.Int("resultsHeight", int(height)))
 
 	// Load the block
 	block := blockStore.LoadBlock(height)

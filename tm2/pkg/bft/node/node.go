@@ -734,6 +734,7 @@ func (n *Node) startRPC() ([]net.Listener, error) {
 		)
 		wm.SetLogger(wmLogger)
 		mux.HandleFunc("/websocket", wm.WebsocketHandler)
+
 		rpcserver.RegisterRPCFuncs(mux, rpccore.Routes, rpcLogger)
 		if strings.HasPrefix(listenAddr, "tcp://") && strings.HasSuffix(listenAddr, ":0") {
 			rebuildAddresses = true

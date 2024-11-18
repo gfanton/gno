@@ -13,6 +13,9 @@ type Config struct {
 	ServiceName       string `json:"service_name" toml:"service_name"`
 	ServiceInstanceID string `json:"service_instance_id" toml:"service_instance_id" comment:"the ID helps to distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled service)"`
 	ExporterEndpoint  string `json:"exporter_endpoint" toml:"exporter_endpoint" comment:"the endpoint to export metrics to, like a local OpenTelemetry collector"`
+
+	TracingEnabled          bool
+	TracingExporterEndpoint string
 }
 
 // DefaultTelemetryConfig is the default configuration used for the node
@@ -29,7 +32,11 @@ func DefaultTelemetryConfig() *Config {
 // ValidateBasic performs basic telemetry config validation and
 // returns an error if any check fails
 func (cfg *Config) ValidateBasic() error {
-	if cfg.ExporterEndpoint == "" {
+	if cfg.MetricsEnabled && cfg.ExporterEndpoint == "" {
+		return errEndpointNotSet
+	}
+
+	if cfg.TracingEnabled && cfg.TracingExporterEndpoint == "" {
 		return errEndpointNotSet
 	}
 

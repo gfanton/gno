@@ -1,11 +1,11 @@
 package client
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/gnolang/gno/tm2/pkg/bft/rpc/core"
 	ctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/core/types"
-	rpctypes "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
 	"github.com/gnolang/gno/tm2/pkg/bft/types"
 	"github.com/gnolang/gno/tm2/pkg/log"
 )
@@ -31,7 +31,7 @@ import (
 // powerful control during testing, you probably want the "client/mock" package.
 type Local struct {
 	Logger *slog.Logger
-	ctx    *rpctypes.ContextRequest
+	ctx    context.Context
 }
 
 // NewLocal configures a client that calls the Node directly through rpc/core,
@@ -39,7 +39,7 @@ type Local struct {
 func NewLocal() *Local {
 	return &Local{
 		Logger: log.NewNoopLogger(),
-		ctx:    &rpctypes.ContextRequest{},
+		ctx:    context.Background(),
 	}
 }
 

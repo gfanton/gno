@@ -19,7 +19,9 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/telemetry"
 	"github.com/gnolang/gno/tm2/pkg/telemetry/metrics"
 	"github.com/gorilla/websocket"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gnolang/gno/tm2/pkg/amino"
 	types "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/types"
@@ -28,43 +30,37 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/service"
 )
 
-var tracer = telemetry.Tracer("handler")
+var tracer = telemetry.Tracer("tm2/server/handler")
 
-// RegisterRPCFuncs adds a route for each function in the funcMap, as well as general jsonrpc and websocket handlers for all functions.
-// "result" is the interface on which the result objects are registered, and is populated with every RPCResponse
+// RegisterRPCFuncs adds routes for each function in the funcMap and sets up
+// general JSON-RPC and WebSocket handlers.
+// "logger" is used throughout for logging purposes.
 func RegisterRPCFuncs(mux *http.ServeMux, funcMap map[string]*RPCFunc, logger *slog.Logger) {
-	// Check if metrics are enabled
-	if telemetry.MetricsEnabled() {
-		// HTTP endpoints
-		for funcName, rpcFunc := range funcMap {
-			mux.HandleFunc(
-				"/"+funcName,
-				telemetryMiddleware(
-					funcName,
-					makeHTTPHandler(rpcFunc, logger),
-				),
-			)
+	// Define a helper function to handle HTTP endpoints
+	handleHTTP := func(funcName string, rpcFunc *RPCFunc) {
+		handler := makeHTTPHandler(rpcFunc, logger)
+		if telemetry.MetricsEnabled() || telemetry.TracingEnabled() {
+			handler = telemetryMiddleware(funcName, handler)
 		}
-
-		// JSONRPC endpoints
-		mux.HandleFunc(
-			"/",
-			telemetryMiddleware(
-				"jsorpc",
-				handleInvalidJSONRPCPaths(makeJSONRPCHandler(funcMap, logger)),
-			),
-		)
-
-		return
+		mux.HandleFunc("/"+funcName, handler)
 	}
 
-	// HTTP endpoints
+	// Define a helper function to handle JSON-RPC endpoints
+	handleJSONRPC := func() {
+		handler := handleInvalidJSONRPCPaths(makeJSONRPCHandler(funcMap, logger))
+		if telemetry.MetricsEnabled() || telemetry.TracingEnabled() {
+			handler = telemetryMiddleware("jsonrpc", handler)
+		}
+		mux.HandleFunc("/", handler)
+	}
+
+	// Register all HTTP endpoints.
 	for funcName, rpcFunc := range funcMap {
-		mux.HandleFunc("/"+funcName, makeHTTPHandler(rpcFunc, logger))
+		handleHTTP(funcName, rpcFunc)
 	}
 
-	// JSONRPC endpoints
-	mux.HandleFunc("/", handleInvalidJSONRPCPaths(makeJSONRPCHandler(funcMap, logger)))
+	// Register the JSON-RPC endpoint.
+	handleJSONRPC()
 }
 
 // -------------------------------------
@@ -77,6 +73,11 @@ type RPCFunc struct {
 	returns  []reflect.Type // type of each return arg
 	argNames []string       // name of each argument
 	ws       bool           // websocket only
+}
+
+func (rpc *RPCFunc) Call(ctx context.Context, args []reflect.Value) (returns []reflect.Value) {
+	ctxArgs := []reflect.Value{reflect.ValueOf(ctx)}
+	return rpc.f.Call(append(ctxArgs, args...))
 }
 
 // NewRPCFunc wraps a function for introspection.
@@ -95,6 +96,7 @@ func newRPCFunc(f interface{}, args string, ws bool) *RPCFunc {
 	if args != "" {
 		argNames = strings.Split(args, ",")
 	}
+
 	return &RPCFunc{
 		f:        reflect.ValueOf(f),
 		args:     funcArgTypes(f),
@@ -162,23 +164,26 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 
 		for _, request := range requests {
 			request := request
+
 			// A Notification is a Request object without an "id" member.
 			// The Server MUST NOT reply to a Notification, including those that are within a batch request.
 			if request.ID == types.JSONRPCStringID("") {
 				logger.Debug("HTTPJSONRPC received a notification, skipping... (please send a non-empty ID if you want to call a method)")
 				continue
 			}
+
 			if len(r.URL.Path) > 1 {
 				responses = append(responses, types.RPCInvalidRequestError(request.ID, errors.New("path %s is invalid", r.URL.Path)))
 				continue
 			}
+
 			rpcFunc, ok := funcMap[request.Method]
 			if !ok || rpcFunc.ws {
 				responses = append(responses, types.RPCMethodNotFoundError(request.ID))
 				continue
 			}
-			ctx := &types.Context{JSONReq: &request, HTTPReq: r}
-			args := []reflect.Value{reflect.ValueOf(ctx)}
+
+			args := []reflect.Value{}
 			if len(request.Params) > 0 {
 				fnArgs, err := jsonParamsToArgs(rpcFunc, request.Params)
 				if err != nil {
@@ -187,19 +192,38 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger *slog.Logger) http.H
 				}
 				args = append(args, fnArgs...)
 			}
-			returns := rpcFunc.f.Call(args)
+
+			ctx := types.NewContextFromContextRequest(r.Context(), &types.ContextRequest{
+				JSONReq: &request, HTTPReq: r,
+			})
+			returns := tracedRPCCall(ctx, rpcFunc, request.Method, args)
+
 			logger.Info("HTTPJSONRPC", "method", request.Method, "args", args, "returns", returns)
 			result, err := unreflectResult(returns)
 			if err != nil {
 				responses = append(responses, types.RPCInternalError(request.ID, err))
 				continue
 			}
+
 			responses = append(responses, types.NewRPCSuccessResponse(request.ID, result))
 		}
+
 		if len(responses) > 0 {
 			WriteRPCResponseArrayHTTP(w, responses)
 		}
 	}
+}
+
+func tracedRPCCall(ctx context.Context, fn *RPCFunc, name string, args []reflect.Value) (returns []reflect.Value) {
+	ctx, span := tracer().Start(ctx, name, trace.WithAttributes(
+		attribute.String("args", fmt.Sprintf("%#v", args))),
+	)
+	defer span.End() // defer here to recover trace from panic
+
+	// pass ctx as first argument
+	returns = fn.Call(ctx, args)
+	span.SetAttributes(attribute.String("returns", fmt.Sprintf("%#v", returns)))
+	return returns
 }
 
 func handleInvalidJSONRPCPaths(next http.HandlerFunc) http.HandlerFunc {
@@ -219,23 +243,22 @@ func handleInvalidJSONRPCPaths(next http.HandlerFunc) http.HandlerFunc {
 func telemetryMiddleware(funcname string, next http.Handler) http.HandlerFunc {
 	prop := propagation.TextMapPropagator(propagation.Baggage{})
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		ctx := prop.Extract(context.Background(), propagation.HeaderCarrier(r.Header))
-		ctx, span := tracer().Start(ctx, funcname)
-		// Reinject span
 		prop.Inject(ctx, propagation.HeaderCarrier(r.Header))
+		ctx, span := tracer().Start(ctx, funcname)
 
+		// Reinject span
 		defer span.End()
 
-		start := time.Now()
+		// start := time.Now()
 
 		next.ServeHTTP(w, r)
 
 		// Log the response time
-		metrics.HTTPRequestTime.Record(
-			context.Background(),
-			time.Since(start).Milliseconds(),
-		)
+		// metrics.HTTPRequestTime.Record(
+		// 	context.Background(),
+		// 	time.Since(start).Milliseconds(),
+		// )
 	}
 }
 
@@ -324,19 +347,18 @@ func makeHTTPHandler(rpcFunc *RPCFunc, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("HTTP HANDLER", "req", r)
 
-		ctx := &types.Context{HTTPReq: r}
-		args := []reflect.Value{reflect.ValueOf(ctx)}
+		ctx := types.NewContextFromContextRequest(r.Context(), &types.ContextRequest{HTTPReq: r})
 
 		fnArgs, err := httpParamsToArgs(rpcFunc, r)
 		if err != nil {
 			WriteRPCResponseHTTP(w, types.RPCInvalidParamsError(types.JSONRPCStringID(""), errors.Wrap(err, "error converting http params to arguments")))
 			return
 		}
-		args = append(args, fnArgs...)
 
-		returns := rpcFunc.f.Call(args)
+		returns := tracedRPCCall(ctx, rpcFunc, r.URL.Path, fnArgs)
 
-		logger.Info("HTTPRestRPC", "method", r.URL.Path, "args", args, "returns", returns)
+		logger.Info("HTTPRestRPC", "method", r.URL.Path, "args", fnArgs, "returns", returns)
+
 		result, err := unreflectResult(returns)
 		if err != nil {
 			WriteRPCResponseHTTP(w, types.RPCInternalError(types.JSONRPCStringID(""), err))
@@ -751,8 +773,7 @@ func (wsc *wsConnection) readRoutine() {
 					continue
 				}
 
-				ctx := &types.Context{JSONReq: &request, WSConn: wsc}
-				args := []reflect.Value{reflect.ValueOf(ctx)}
+				args := []reflect.Value{}
 				if len(request.Params) > 0 {
 					fnArgs, err := jsonParamsToArgs(rpcFunc, request.Params)
 					if err != nil {
@@ -763,7 +784,10 @@ func (wsc *wsConnection) readRoutine() {
 					args = append(args, fnArgs...)
 				}
 
-				returns := rpcFunc.f.Call(args)
+				ctx := types.NewContextFromContextRequest(wsc.Context(), &types.ContextRequest{
+					JSONReq: &request, WSConn: wsc,
+				})
+				returns := tracedRPCCall(ctx, rpcFunc, request.Method, args)
 
 				// TODO: Need to encode args/returns to string if we want to log them
 				wsc.Logger.Info("WSJSONRPC", "method", request.Method)

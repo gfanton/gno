@@ -2,7 +2,10 @@ package core
 
 import (
 	rpc "github.com/gnolang/gno/tm2/pkg/bft/rpc/lib/server"
+	"github.com/gnolang/gno/tm2/pkg/telemetry"
 )
+
+var tracer = telemetry.Tracer("tm2/rpc/core")
 
 // TODO: better system than "unsafe" prefix
 // NOTE: Amino is registered in rpc/core/types/codec.go.

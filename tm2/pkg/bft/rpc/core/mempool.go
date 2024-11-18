@@ -13,6 +13,8 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/events"
 	"github.com/gnolang/gno/tm2/pkg/random"
 	"github.com/gnolang/gno/tm2/pkg/service"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // -----------------------------------------------------------------------------
@@ -225,6 +227,10 @@ func BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastT
 // |-----------+------+---------+----------+-----------------|
 // | tx        | Tx   | nil     | true     | The transaction |
 func BroadcastTxCommit(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+	ctx, span := tracer().Start(ctx, "broadcast_tx_commit",
+		trace.WithAttributes(attribute.String("tx", tx.String())))
+	defer span.End()
+
 	// Broadcast tx and wait for CheckTx result
 	checkTxResCh := make(chan abci.Response, 1)
 	err := mempool.CheckTx(tx, func(res abci.Response) {
