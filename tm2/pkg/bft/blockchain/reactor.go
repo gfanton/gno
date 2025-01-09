@@ -43,6 +43,8 @@ const (
 // and start the consensus process for the validator node
 type SwitchToConsensusFn func(sm.State, int)
 
+func noopSwitchToConsensusFn(sm.State, int) {}
+
 type peerError struct {
 	err    error
 	peerID p2pTypes.ID
@@ -81,6 +83,10 @@ func NewBlockchainReactor(
 	if state.LastBlockHeight != store.Height() {
 		panic(fmt.Sprintf("state (%v) and store (%v) height mismatch", state.LastBlockHeight,
 			store.Height()))
+	}
+
+	if switchToConsensusFn == nil {
+		switchToConsensusFn = noopSwitchToConsensusFn
 	}
 
 	requestsCh := make(chan BlockRequest, maxTotalRequesters)
