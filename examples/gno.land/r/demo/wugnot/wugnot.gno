@@ -17,7 +17,7 @@ const (
 )
 
 func init() {
-	grc20reg.Register(Token.Getter(), "")
+	cross(grc20reg.Register)(Token.Getter(), "")
 }
 
 func Deposit() {
@@ -77,6 +77,8 @@ func Transfer(to std.Address, amount uint64) {
 }
 
 func Approve(spender std.Address, amount uint64) {
+	crossing()
+
 	userTeller := Token.CallerTeller()
 	checkErr(userTeller.Approve(spender, amount))
 }
