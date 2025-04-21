@@ -20,7 +20,7 @@ var (
 
 func init() {
 	privateLedger.Mint(Ownable.Owner(), 1_000_000*10_000) // @privateLedgeristrator (1M)
-	grc20reg.Register(Token.Getter(), "")
+	cross(grc20reg.Register)(Token.Getter(), "")
 }
 
 func TotalSupply() uint64 {
@@ -36,6 +36,8 @@ func Allowance(owner, spender std.Address) uint64 {
 }
 
 func Transfer(to std.Address, amount uint64) {
+	crossing()
+
 	checkErr(UserTeller.Transfer(to, amount))
 }
 
@@ -50,6 +52,8 @@ func TransferFrom(from, to std.Address, amount uint64) {
 // Faucet is distributing foo20 tokens without restriction (unsafe).
 // For a real token faucet, you should take care of setting limits are asking payment.
 func Faucet() {
+	crossing()
+
 	caller := std.PreviousRealm().Address()
 	amount := uint64(1_000 * 10_000) // 1k
 	checkErr(privateLedger.Mint(caller, amount))
