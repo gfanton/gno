@@ -183,18 +183,18 @@ func GCVisitorFn(gcCycle int64, alloc *Allocator, visitCount *int64) Visitor {
 
 			// Handle object cycle tracking
 			if oo, isObject := v.(Object); isObject {
-				// Return if already measured in this GC cycle
+				// Return if already measured.
 				if debug {
 					debug.Printf("oo.GetLastGCCycle: %d, gcCycle: %d\n", oo.GetLastGCCycle(), gcCycle)
 				}
 				if oo.GetLastGCCycle() == gcCycle {
-					continue
+					continue // but don't stop
 				}
 			}
 
 			*visitCount++ // Count operations for gas calculation
 
-			// Add object size to alloc
+			// Add object size to alloc.
 			size := v.GetShallowSize()
 
 			// Stop if alloc max exceeded during GC.
@@ -208,9 +208,8 @@ func GCVisitorFn(gcCycle int64, alloc *Allocator, visitCount *int64) Visitor {
 
 			alloc.Allocate(size)
 
-			// Bump cycle AFTER allocation check but BEFORE visiting associated.
-			// This avoids infinite recursion while ensuring proper accounting.
-			// In a flow of: A -> B -> A visit, bump cycle for A first to avoid infinite loop.
+			// bump before visiting associated,
+			// this avoids infinite recurse.
 			if oo, isObject := v.(Object); isObject {
 				oo.SetLastGCCycle(gcCycle)
 			}
@@ -259,8 +258,18 @@ func (fv *FuncValue) VisitAssociated(vis Visitor) (stop bool) {
 		}
 	}
 
-	// Skip visiting the parent to avoid redundancy
-	// and prevent a potential cycle.
+	// Visit parent.
+	switch v := fv.Parent.(type) {
+	case nil:
+		return
+	case *Block:
+		if v != nil {
+			stop = vis(v)
+		}
+	case RefValue:
+		stop = vis(v)
+	}
+
 	return
 }
 
