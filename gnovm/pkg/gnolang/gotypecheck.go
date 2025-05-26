@@ -55,7 +55,7 @@ func (a address) IsValid() bool { return false } // shim
 type Address = address
 
 type gnocoins []gnocoin
-type Gnocoins = gnocoins
+t gsype Gnocoins = gnocoins
 
 type gnocoin struct {
     Denom string
@@ -130,7 +130,7 @@ func (gw gnoBuiltinsGetterWrapper) GetMemPackage(pkgPath string) *std.MemPackage
 //
 // Args:
 //   - strict: ensure gno.mod exists and gno version is latest.
-func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, strict bool) (
+func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, strict bool, pmode ParseMode) (
 	pkg *types.Package, errs error) {
 
 	var gimp *gnoImporter
@@ -147,7 +147,6 @@ func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, strict b
 	}
 	gimp.cfg.Importer = gimp
 
-	pmode := ParseModeAll // type check all .gno files
 	pkg, errs = gimp.typeCheckMemPackage(mpkg, pmode, strict)
 	return
 }
