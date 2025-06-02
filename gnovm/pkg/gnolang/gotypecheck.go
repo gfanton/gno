@@ -140,8 +140,9 @@ const (
 // The syntax checking is performed entirely using Go's go/types package.
 //
 // Args:
-//   - tcmode: TypeCheckMode, see comments above.
-func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, tcmode TypeCheckMode) (
+
+// - tcmode: TypeCheckMode, see comments above.
+func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, pmode ParseMode, tcmode TypeCheckMode) (
 	pkg *types.Package, errs error,
 ) {
 	var gimp *gnoImporter
@@ -159,7 +160,6 @@ func TypeCheckMemPackage(mpkg *std.MemPackage, getter MemPackageGetter, tcmode T
 	}
 	gimp.cfg.Importer = gimp
 
-	pmode := ParseModeAll // type check all .gno files
 	pkg, errs = gimp.typeCheckMemPackage(mpkg, pmode)
 	return
 }
