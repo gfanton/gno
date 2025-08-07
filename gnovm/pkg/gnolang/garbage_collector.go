@@ -1,6 +1,7 @@
 package gnolang
 
 import (
+	"iter"
 	"reflect"
 
 	"github.com/gnolang/gno/tm2/pkg/overflow"
@@ -42,6 +43,7 @@ func (m *Machine) GarbageCollect() (left int64, ok bool) {
 		if debug {
 			debug.Printf("GasConsumed for GC: %v\n", gasCPU)
 		}
+
 		if m.GasMeter != nil {
 			m.GasMeter.ConsumeGas(gasCPU, "GC")
 		}
@@ -113,52 +115,109 @@ func (m *Machine) GarbageCollect() (left int64, ok bool) {
 	return maxBytes - bytes, true
 }
 
+// iterAssociated returns an iterator over all values associated with
+// root, including root itself and all transitively associated values
+// using iterative traversal.
+func iterAssociated(root Value) iter.Seq[Value] {
+	return func(yield func(Value) bool) {
+		if root == nil {
+			return
+		}
+
+		// Track visited values to avoid cycles
+		visited := make(map[Value]bool)
+
+		// Stack for iterative depth-first traversal
+		// Pre-allocate with reasonable capacity to reduce allocations
+		stack := make([]Value, 0, 64)
+		stack = append(stack, root)
+
+		// Reusable slice for collecting associated values
+		associated := make([]Value, 0, 16)
+
+		for len(stack) > 0 {
+			// Pop stack
+			v := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+
+			if v == nil || visited[v] {
+				continue
+			}
+			visited[v] = true
+
+			// Yield the current value
+			if !yield(v) {
+				return
+			}
+
+			// Collect associated values
+			// Reset length to 0, keeping underlying capacity
+			associated = associated[:0]
+			v.VisitAssociated(func(assoc Value) bool {
+				if assoc != nil && !visited[assoc] {
+					associated = append(associated, assoc)
+				}
+				return false // Continue collecting
+			})
+
+			// Push in reverse order for depth-first traversal
+			for i := len(associated) - 1; i >= 0; i-- {
+				stack = append(stack, associated[i])
+			}
+		}
+	}
+}
+
 // Returns a visitor that bumps the GCCycle counter
 // and stops if alloc is out of memory.
 func GCVisitorFn(gcCycle int64, alloc *Allocator, visitCount *int64) Visitor {
-	var vis func(value Value) bool
-
-	vis = func(v Value) bool {
-		if debug {
-			debug.Printf("Visit, v: %v (type: %v)\n", v, reflect.TypeOf(v))
+	return func(root Value) bool {
+		if root == nil {
+			return false
 		}
 
-		if oo, isObject := v.(Object); isObject {
-			defer func() {
-				// Finally bump cycle for object.
-				oo.SetLastGCCycle(gcCycle)
-			}()
-
-			// Return if already measured.
+		for v := range iterAssociated(root) {
 			if debug {
-				debug.Printf("oo.GetLastGCCycle: %d, gcCycle: %d\n", oo.GetLastGCCycle(), gcCycle)
+				debug.Printf("Visit, v: %v (type: %v)\n", v, reflect.TypeOf(v))
 			}
-			if oo.GetLastGCCycle() == gcCycle {
-				return false // but don't stop
+
+			// Handle object cycle tracking
+			if oo, isObject := v.(Object); isObject {
+				// Return if already measured in this GC cycle
+				if debug {
+					debug.Printf("oo.GetLastGCCycle: %d, gcCycle: %d\n", oo.GetLastGCCycle(), gcCycle)
+				}
+				if oo.GetLastGCCycle() == gcCycle {
+					continue
+				}
+			}
+
+			*visitCount++ // Count operations for gas calculation
+
+			// Add object size to alloc
+			size := v.GetShallowSize()
+
+			// Stop if alloc max exceeded during GC.
+			// NOTE: Unlikely to occur, but keep it here for
+			// now to handle potential edge cases.
+			// Consider removing it later if no issues arise.
+			maxBytes, curBytes := alloc.Status()
+			if maxBytes < curBytes+size {
+				return true
+			}
+
+			alloc.Allocate(size)
+
+			// Bump cycle AFTER allocation check but BEFORE visiting associated.
+			// This avoids infinite recursion while ensuring proper accounting.
+			// In a flow of: A -> B -> A visit, bump cycle for A first to avoid infinite loop.
+			if oo, isObject := v.(Object); isObject {
+				oo.SetLastGCCycle(gcCycle)
 			}
 		}
 
-		*visitCount++ // Count operations for gas calculation
-
-		// Add object size to alloc.
-		size := v.GetShallowSize()
-		alloc.Allocate(size)
-
-		// Stop if alloc max exceeded.
-		// NOTE: Unlikely to occur, but keep it here for
-		// now to handle potential edge cases.
-		// Consider removing it later if no issues arise.
-		maxBytes, curBytes := alloc.Status()
-		if maxBytes < curBytes {
-			return true
-		}
-
-		// Invoke the traverser on v.
-		stop := v.VisitAssociated(vis)
-
-		return stop
+		return false
 	}
-	return vis
 }
 
 // ---------------------------------------------------------------
