@@ -6,11 +6,11 @@ import (
 	"github.com/gnolang/gno/tm2/pkg/crypto"
 	"github.com/gnolang/gno/tm2/pkg/crypto/hd"
 	"github.com/gnolang/gno/tm2/pkg/db"
-	_ "github.com/gnolang/gno/tm2/pkg/db/pebbledb"
+	_ "github.com/gnolang/gno/tm2/pkg/db/goleveldb"
 	"github.com/gnolang/gno/tm2/pkg/os"
 )
 
-const dbBackend = db.PebbleDBBackend
+const dbBackend = db.GoLevelDBBackend
 
 var _ Keybase = lazyKeybase{}
 
@@ -19,7 +19,7 @@ type lazyKeybase struct {
 	dir  string
 }
 
-// New creates a new instance of a lazy keybase.
+// NewLazyDBKeybase creates a new instance of a lazy keybase.
 func NewLazyDBKeybase(name, dir string) Keybase {
 	if err := os.EnsureDir(dir, 0o700); err != nil {
 		panic(fmt.Sprintf("failed to create Keybase directory: %s", err))
