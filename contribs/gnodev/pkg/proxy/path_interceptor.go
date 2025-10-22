@@ -325,10 +325,7 @@ func handleTx(bz []byte, upaths uniqPaths) error {
 				upaths.addPackageDeps(msg.Package)
 			}
 		case vm.MsgRun:
-			// NOTE: Do not add the package itself to avoid conflict.
-			if msg.Package != nil {
-				upaths.addPackageDeps(msg.Package)
-			}
+			// Ignore MsgRun as the package is only temporary
 		case vm.MsgCall:
 			upaths.addPath(msg.PkgPath)
 		}
