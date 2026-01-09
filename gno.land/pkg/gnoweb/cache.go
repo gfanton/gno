@@ -7,7 +7,8 @@ func CacheHandler(hash string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Set global ETag for all assets
 		w.Header().Set("ETag", hash)
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		// no-cache means "always revalidate with server before using cache"
+		w.Header().Set("Cache-Control", "no-cache")
 
 		// Return 304 if client's cached version matches
 		if r.Header.Get("If-None-Match") == hash {

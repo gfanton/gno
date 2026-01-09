@@ -343,7 +343,7 @@ func handleQuery(path string, data []byte, upaths uniqPaths) error {
 	case ".app/simulate":
 		return handleTx(data, upaths)
 
-	case "vm/qrender", "vm/qfile", "vm/qfuncs", "vm/qeval":
+	case "vm/qdoc", "vm/qrender", "vm/qfile", "vm/qfuncs", "vm/qeval":
 		path, _, _ := strings.Cut(string(data), ":") // Cut arguments out
 		upaths.addPath(path)
 		return nil
