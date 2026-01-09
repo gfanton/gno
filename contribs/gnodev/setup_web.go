@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gnolang/gno/gno.land/pkg/gnoweb"
 )
@@ -12,6 +13,11 @@ import (
 func setupGnoWebServer(logger *slog.Logger, cfg *AppConfig, remoteAddr string) (http.Handler, error) {
 	if cfg.noWeb {
 		return http.HandlerFunc(http.NotFound), nil
+	}
+
+	// Strip protocol prefix (e.g., "tcp://") as gnoweb expects just "host:port"
+	if idx := strings.Index(remoteAddr, "://"); idx != -1 {
+		remoteAddr = remoteAddr[idx+3:]
 	}
 
 	appcfg := gnoweb.NewDefaultAppConfig()
