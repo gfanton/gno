@@ -1,0 +1,7 @@
+{
+  "name": "gnodig",
+  "description": "Chain investigation toolkit for gno.land — interactive debugging with expert agents, shared playbooks, and session management",
+  "author": {
+    "name": "gnolang"
+  }
+}

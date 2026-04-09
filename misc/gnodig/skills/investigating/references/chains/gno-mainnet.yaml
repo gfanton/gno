@@ -1,0 +1,17 @@
+chain_id: gno-mainnet
+genesis_hash: ""  # fill when mainnet launches
+launch_date: ""   # fill when mainnet launches
+
+# Heights of interest for debugging reference
+known_heights:
+  - height: 352922
+    event: "consensus halt — typeCheckCache cold start divergence"
+    reference: "gnolang/gno#5400"
+
+# Known quirks of this chain
+quirks:
+  - "p2p.seeds config is a no-op — only persistent_peers works"
+  - "typeCheckCache may miss leaf stdlibs on cold start (fixed in #5401)"
+
+# Default data paths (operators override in .debug/chains/gno-mainnet/nodes/)
+notes: "Main production chain. Validators typically run on amd64 Linux."

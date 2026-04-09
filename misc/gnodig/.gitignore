@@ -1,0 +1,13 @@
+# Investigation data (logs, node data, archives) to build the projet, not actual real investigation
+.data/
+
+# Built binary
+/gnodig
+
+# Investigation sessions (personal state)
+.debug/
+.debug-test/
+
+# Local artifacts
+authorized_keys
+docs/

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gnodig": {
+      "type": "stdio",
+      "command": "go",
+      "args": ["run", "./cmd/gnodig", "serve"]
+    }
+  }
+}
